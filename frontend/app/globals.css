@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@font-face {
+    font-family: kalameh300;
+    src: url("../public/fonts/Kalameh(FaNum)-Light.ttf") format('truetype')
+}
+
+@font-face {
+    font-family: kalameh400;
+    src: url("../public/fonts/Kalameh(FaNum)-Regular.ttf") format('truetype')
+}
+
+@font-face {
+    font-family: kalameh500;
+    src: url("../public/fonts/Kalameh(FaNum)-Medium.ttf") format('truetype')
+}
+
+@font-face {
+    font-family: kalameh700;
+    src: url("../public/fonts/Kalameh-Bold.ttf") format('truetype')
+}
+
+@font-face {
+    font-family: kalamehBold;
+    src: url("../public/fonts/Kalameh-Black.ttf") format('truetype')
+}
+
+@font-face {
+    font-family: potk;
+    src: url("../public/fonts/Potk.ttf") format('truetype')
+}
+
+html {
+    @apply font-kalameh300
+}
+
+@tailwind utilities;
+
+
+@layer utilities {
+    .active {
+        @apply text-[#E6AE07] border-b-[1px] border-[#E6AE07]
+    }
+    .icon{
+        @apply w-[25px] h-[25px] lg:w-[45px] lg:h-[45px]
+    }
+
+}
+@layer base {
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+}
+
+html,
+body,
+:root {
+    margin: 0 auto;
+    box-sizing: border-box;
+    direction: rtl;
+    background-color: white;
+    color: black;
+}
+/* width */
+::-webkit-scrollbar {
+    width: 4px;
+
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #F7F6F6;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 12px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+.leaflet-control { z-index: 0 !important}
+.leaflet-pane { z-index: 0 !important}
+.leaflet-top, .leaflet-bottom {z-index: 0 !important}
