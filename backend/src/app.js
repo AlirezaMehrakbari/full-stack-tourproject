@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import hotelRoutes from "./routes/hotelRoutes.js";
+import villaRoutes from "./routes/villaRoutes.js";
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/villas", villaRoutes);
 
 // Default route
 app.get("/", (req, res) => {
