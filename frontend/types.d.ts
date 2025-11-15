@@ -31,7 +31,7 @@ type Villa = {
     }
 }
 type PaginateVilla = {
-    data : Villa[],
+    data: Villa[],
     links: {
         first: string,
         last: string,
@@ -89,18 +89,10 @@ type User = {
 }
 type VillaDetails = {
     id: number,
-    user_id: number,
+    user_id: number
+    constructionYear: number,
     title: string,
-    address: {
-        state: string,
-        city: string,
-        region: string,
-        street: string,
-        alley: string,
-        plaque: string,
-        lng: string,
-        lat: string
-    },
+    address: string
     meter: string,
     suitableFor: string,
     numberOfRooms: string,

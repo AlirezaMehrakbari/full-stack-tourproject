@@ -1,62 +1,81 @@
-import React, {useEffect, useState} from 'react'
-import VillaItem, {VillaItemProps} from "@/app/components/villa/VillaItem";
-import image from '@/public/images/test.jpg'
+import React, {useState} from 'react';
+import VillaItem from "@/app/components/villa/VillaItem";
 import {useAppSelector} from "@/app/redux/store";
 import {toast} from "react-toastify";
 import {tripTourApi} from "@/axios-instances";
+import fallbackImage from '@/public/images/test.jpg'; // تصویر پیش‌فرض اگر image = null باشد
+
+export type FavoriteListType = {
+    id: number;
+};
 
 type VillaListProps = {
-    data: any[]
-}
-export type FavoriteListType = {
-    id: number
-}
-const VillaList: React.FC<VillaListProps> = ({data}) => {
-    const userSession = useAppSelector(state => state.userSlice)
-    const [favoriteList, setFavoriteList] = useState<FavoriteListType[]>([])
+    data: {
+        id: number;
+        title: string;
+        city: string;
+        pricePerNight: number;
+        capacity: number;
+        avgRating: number;
+        image: string | null;
+        province: string,
+        numReviews: number
+    }[];
+};
 
-    const handleFavoritePlace = (villaId: number) => {
-        let existingItem = favoriteList.find(item => item.id === villaId)
-        if (!existingItem) {
-            setFavoriteList(prev => [...prev, {id: villaId}])
+const VillaList: React.FC<VillaListProps> = ({data}) => {
+    const userSession = useAppSelector(state => state.userSlice);
+    const [favoriteList, setFavoriteList] = useState<FavoriteListType[]>([]);
+
+    const handleFavoritePlace = async (villaId: number) => {
+        const isFavorite = favoriteList.some(item => item.id === villaId);
+
+        if (isFavorite) {
+            setFavoriteList(prev => prev.filter(item => item.id !== villaId));
         } else {
-            const newFavoriteList = favoriteList.filter(item => item.id !== villaId)
-            setFavoriteList(newFavoriteList)
+            setFavoriteList(prev => [...prev, {id: villaId}]);
         }
-        tripTourApi.post(`users/manageFavoritePlaces/${villaId}`, {}, {
-            headers: {
-                Authorization: `Bearer ${userSession.value.token}`
-            }
-        }).then(res => {
+
+        try {
+            const res = await tripTourApi.post(
+                `users/manageFavoritePlaces/${villaId}`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${userSession.value.token}`,
+                    },
+                }
+            );
+
             if (res.data.message === "insert to favorites") {
-                toast.success('به لیست علاقه مندی ها اضافه شد.')
+                toast.success('به علاقه‌مندی‌ها اضافه شد.');
             } else if (res.data.message === "delete from favorites") {
-                toast.warn('از لیست علاقه مندی ها حذف شد.')
+                toast.warn('از علاقه‌مندی‌ها حذف شد.');
             }
-        }).catch(error => {
-            toast.error('مشکلی رخ داده است!')
-        })
-    }
+        } catch (err) {
+            toast.error('خطایی در ارتباط با سرور رخ داده است!');
+        }
+    };
+
     return (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10">
-            {data.map(item => {
-                return (
-                    <VillaItem
-                        onClickFavorite={() => handleFavoritePlace(item.id)}
-                        key={item.id}
-                        id={item.id}
-                        image={image}
-                        title={item.title}
-                        Satisfaction={Math.round(item.rating_comment.averageRating)}
-                        opinion={item.rating_comment.totalComments}
-                        province={item.address.state}
-                        city={item.address.city}
-                        price={item.pricePerNight}
-                        favoriteList={favoriteList}
-                    />
-                )
-            })}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-8">
+            {data.map((villa) => (
+                <VillaItem
+                    key={villa.id}
+                    id={villa.id}
+                    image={villa.image ? villa.image : fallbackImage}
+                    title={villa.title}
+                    province={villa.province}
+                    city={villa.city}
+                    price={villa.pricePerNight.toString()}
+                    Satisfaction={villa.avgRating}
+                    opinion={villa.numReviews}
+                    favoriteList={favoriteList}
+                    onClickFavorite={() => handleFavoritePlace(villa.id)}
+                />
+            ))}
         </div>
-    )
-}
-export default VillaList
+    );
+};
+
+export default VillaList;

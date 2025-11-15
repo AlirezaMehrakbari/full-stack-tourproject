@@ -1,5 +1,5 @@
 import Axios from 'axios';
 
 export const tripTourApi = Axios.create({
-    baseURL: 'https://triptour.v1r.ir/api/',
+    baseURL: 'http://localhost:5000/api/',
 });

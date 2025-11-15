@@ -8,7 +8,7 @@ import {toast} from "react-toastify";
 
 export type VillaItemProps = {
     id: number
-    image: StaticImageData,
+    image: string | StaticImageData,
     title: string,
     Satisfaction: number,
     opinion: number,

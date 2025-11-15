@@ -23,6 +23,7 @@ import {setVillaReserve} from "@/app/redux/slices/villaReserve-slice";
 import Loading from "@/app/components/Loading";
 
 const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
+    console.log(villaDetails)
     const step = useStep()
     const dispatch = useAppDispatch()
     const [firstMonth, setFirstMonth] = useState([
@@ -36,6 +37,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
     const [exitDate, setExitDate] = useState('')
     const [passengers, setPassengers] = useState<number>(0)
     const [isOpen, setIsOpen] = useState()
+    const { isLoggedIn } = useAppSelector((state) => state.userSlice.value);
 
     const pictures = [
         {id: 1, src: Picture1},
@@ -120,12 +122,12 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                     })}
                                 <div className='self-end'>
                                     {/*{villaDetails?.facilities?.length > 6 &&*/}
-                                        <button
-                                            className="text-[17px] text-[#4E69CA] border-[0.3px] border-[#9A9A9A] rounded-[12px] px-3"
-                                            //@ts-ignore
-                                            onClick={() => document.getElementById('my_modal_2').showModal()}>
-                                            مشاهده همـه امکانــات
-                                        </button>
+                                    <button
+                                        className="text-[17px] text-[#4E69CA] border-[0.3px] border-[#9A9A9A] rounded-[12px] px-3"
+                                        //@ts-ignore
+                                        onClick={() => document.getElementById('my_modal_2').showModal()}>
+                                        مشاهده همـه امکانــات
+                                    </button>
                                     {/*}*/}
                                 </div>
                                 <dialog id="my_modal_2" className="modal">
@@ -200,6 +202,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                 </div>
                                 <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
                                     <p className='text-[12px] font-kalameh400 py-[12px] px-4'>سال ساخت</p>
+                                    <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.constructionYear}</p>
                                 </div>
                                 <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
                                     <p className='text-[12px] font-kalameh400 py-[12px] px-4'>طبـقه</p>
@@ -276,15 +279,12 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                             <div className='pt-4'>
                                 {/*<Map position={[+villaDetails?.address.lng, +villaDetails?.address.lat]} popup={'ویلا'}/>*/}
                                 <p className='whitespace-pre  lg:text-[24px] text-[#888888]'>
-                                    {villaDetails?.address?.state}،
-                                    {villaDetails?.address?.city}،
-                                    خیابان {villaDetails?.address?.street}،
-                                    کوچه {villaDetails?.address?.alley}
+                                    {villaDetails.address}
                                 </p>
                             </div>
                         </div>
                         <div className='pt-20'>
-                            <Comments />
+                            <Comments villaId={villaDetails.id} disabled={!isLoggedIn} />
                         </div>
                         {/*حالت موبایل انتخاب رزرو*/}
                         <div
