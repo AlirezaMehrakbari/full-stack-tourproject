@@ -1,44 +1,63 @@
 import mongoose from "mongoose";
 
-const bookedDateSchema = new mongoose.Schema({
-    start: { type: Date, required: true },
-    end: { type: Date, required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-});
-
 const reviewSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    user: { type: String },
     username: { type: String },
-    rating: { type: Number, min: 1, max: 5 },
+    rating: { type: Number },
     text: { type: String },
     reply: { type: String },
     createdAt: { type: Date, default: Date.now }
 });
 
-const VillaSchema = new mongoose.Schema(
+const bookedSchema = new mongoose.Schema({
+    start: { type: Date },
+    end: { type: Date },
+    user: { type: String }
+});
+
+const villaSchema = new mongoose.Schema(
     {
+        id: { type: Number, unique: true, required: true },
         title: { type: String, required: true },
-        description: { type: String },
-        city: { type: String },
-        province: { type: String },
-        address: { type: String },
-        area: { type: Number },
-        suitableFor: { type: String },
-        rooms: { type: Number },
-        floor: { type: String },
-        constructionYear: { type: Number },
-        capacity: { type: Number },
-        pricePerNight: { type: Number },
+        description: { type: String, required: true },
+        pricePerNight: { type: Number, required: true },
         pricePerPerson: { type: Number },
-        ownerName: { type: String },
-        ownerDescription: { type: String },
-        images: [{ type: String }],
+        capacity: { type: Number, required: true },
+        numRooms: { type: Number },
+        suitableFor: [{ type: String }],
+        constructionYear: { type: Number },
+        floor: { type: Number },
+        area: { type: Number },
+        province: { type: String, required: true },
+        city: { type: String, required: true },
+        address: { type: String },
+        terrainType: { type: String },
         facilities: [{ type: String }],
-        reviews: [reviewSchema],
+        images: [{ type: String }],
+        location: {
+            lat: { type: Number },
+            lng: { type: Number }
+        },
+        rules: [{ type: String }],
+        ownerName: { type: String },
         avgRating: { type: Number, default: 0 },
-        bookedDates: [bookedDateSchema]
+        numReviews: { type: Number, default: 0 },
+        reviews: [reviewSchema],
+        bookedDates: [bookedSchema]
     },
     { timestamps: true }
 );
 
-export default mongoose.model("Villa", VillaSchema);
+villaSchema.pre("validate", async function (next) {
+    if (this.id == null) {
+        const lastVilla = await mongoose
+            .model("Villa")
+            .findOne({}, { id: 1 })
+            .sort({ id: -1 });
+        this.id = lastVilla && lastVilla.id ? lastVilla.id + 1 : 1;
+    }
+    next();
+});
+
+const Villa = mongoose.models.Villa || mongoose.model("Villa", villaSchema);
+export default Villa;

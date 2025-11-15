@@ -1,203 +1,227 @@
-// src/controllers/villaController.js
-
 import Villa from "../models/Villa.js";
 
-/* =========================================================
-   ۱. دریافت لیست ویلاها با فیلتر
-   ---------------------------------------------------------
-   مثال:
-   GET /api/villas?city=رامسر&capacity=6&minPrice=1000000&maxPrice=3000000
-========================================================= */
+/**
+ * Helper: اطمینان از وجود تمام فیلدها در خروجی (فقط در getVillaById)
+ */
+const ensureAllFields = (villaDoc) => {
+    const villa = villaDoc.toObject();
+
+    const defaults = {
+        description: "",
+        address: "",
+        area: null,
+        suitableFor: "",
+        numRooms: null,
+        floor: null,
+        constructionYear: null,
+        capacity: null,
+        pricePerPerson: null,
+        ownerName: "",
+        ownerDescription: "",
+        images: [],
+        facilities: [],
+        reviews: [],
+        avgRating: 0,
+        numReviews: 0,
+        bookedDates: [],
+    };
+
+    // با گشتن روی defaults مقادیر خالی اضافه کن
+    for (const [key, val] of Object.entries(defaults)) {
+        if (!villa.hasOwnProperty(key)) villa[key] = val;
+    }
+
+    return villa;
+};
+
+/**
+ * GET /api/villas
+ * لیست همه ویلاها (خروجی سبک)
+ */
 export const getAllVillas = async (req, res) => {
     try {
-        const { city, capacity, minPrice, maxPrice } = req.query;
-        const query = {};
+        const filter = {};
 
-        if (city) query.city = city;
-        if (capacity) query.capacity = { $gte: Number(capacity) };
+        if (req.query.city) filter.city = new RegExp(req.query.city, "i");
+        if (req.query.province) filter.province = new RegExp(req.query.province, "i");
 
-        if (minPrice || maxPrice) {
-            query.pricePerNight = {};
-            if (minPrice) query.pricePerNight.$gte = Number(minPrice);
-            if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
+        if (req.query.minPrice || req.query.maxPrice) {
+            filter.pricePerNight = {};
+            if (req.query.minPrice) filter.pricePerNight.$gte = Number(req.query.minPrice);
+            if (req.query.maxPrice) filter.pricePerNight.$lte = Number(req.query.maxPrice);
         }
 
-        const villas = await Villa.find(query);
+        if (req.query.minCapacity || req.query.maxCapacity) {
+            filter.capacity = {};
+            if (req.query.minCapacity) filter.capacity.$gte = Number(req.query.minCapacity);
+            if (req.query.maxCapacity) filter.capacity.$lte = Number(req.query.maxCapacity);
+        }
 
-        const response = villas.map(v => ({
-            _id: v._id,
-            title: v.title,
-            city: v.city,
-            pricePerNight: v.pricePerNight,
-            capacity: v.capacity,
-            bedrooms: v.rooms,
-            avgRating: v.avgRating || 0,
-            image: v.images?.[0] || null
-        }));
+        if (req.query.minRating) filter.avgRating = { $gte: Number(req.query.minRating) };
 
-        res.status(200).json(response);
+        const villas = await Villa.find(filter)
+            .select("id title city province pricePerNight capacity avgRating numReviews images numRooms area")
+            .sort({ id: 1 });
+
+        // خروجی ساده بدون اجباری کردن فیلدهای خالی
+        res.status(200).json(villas);
     } catch (error) {
-        console.error("❌ خطا در دریافت لیست ویلاها:", error);
-        res.status(500).json({ message: "خطایی در سرور رخ داد." });
+        console.error("Error fetching villas:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-/* =========================================================
-   ۲. دریافت جزئیات کامل یک ویلا
-========================================================= */
+/**
+ * GET /api/villas/:id
+ * جزئیات کامل ویلا با تضمین تمام فیلدها
+ */
 export const getVillaById = async (req, res) => {
     try {
-        const villaId = req.params.id;
-        const villa = await Villa.findById(villaId);
+        const villaId = Number(req.params.id);
+        const villa = await Villa.findOne({ id: villaId });
 
-        if (!villa) return res.status(404).json({ message: "ویلا پیدا نشد" });
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        let avgRating = 0;
-        if (villa.reviews && villa.reviews.length > 0) {
-            const sum = villa.reviews.reduce((acc, cur) => acc + (cur.rating || 0), 0);
-            avgRating = (sum / villa.reviews.length).toFixed(1);
-        }
+        // اینجا تضمین می‌کنیم همه فیلدها بیان
+        const formatted = ensureAllFields(villa);
 
-        res.status(200).json({
-            _id: villa._id,
+        res.status(200).json(formatted);
+    } catch (error) {
+        console.error("Error getting villa:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+/**
+ * POST /api/villas
+ * افزودن ویلا جدید
+ */
+export const createVilla = async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            city,
+            province,
+            address,
+            area,
+            suitableFor,
+            numRooms,
+            floor,
+            constructionYear,
+            capacity,
+            pricePerNight,
+            pricePerPerson,
+            ownerName,
+            ownerDescription,
+            images,
+            facilities,
+        } = req.body;
+
+        const villa = new Villa({
+            title,
+            description,
+            city,
+            province,
+            address,
+            area,
+            suitableFor,
+            numRooms,
+            floor,
+            constructionYear,
+            capacity,
+            pricePerNight,
+            pricePerPerson,
+            ownerName,
+            ownerDescription,
+            images,
+            facilities,
+        });
+
+        await villa.save();
+
+        res.status(201).json({
+            id: villa.id,
             title: villa.title,
-            description: villa.description,
             city: villa.city,
             province: villa.province,
-            address: villa.address,
-            area: villa.area,
-            suitableFor: villa.suitableFor,
-            rooms: villa.rooms,
-            floor: villa.floor,
-            constructionYear: villa.constructionYear,
-            capacity: villa.capacity,
             pricePerNight: villa.pricePerNight,
-            pricePerPerson: villa.pricePerPerson,
-            ownerName: villa.ownerName,
-            ownerDescription: villa.ownerDescription,
-            images: villa.images,
-            facilities: villa.facilities,
-            reviews: villa.reviews,
-            avgRating: Number(avgRating),
-            bookedDates: villa.bookedDates,
-            createdAt: villa.createdAt
+            capacity: villa.capacity,
+            numRooms: villa.numRooms,
+            area: villa.area,
         });
     } catch (error) {
-        console.error("❌ خطا در دریافت ویلا:", error);
-        res.status(500).json({ message: "خطایی در سرور رخ داد." });
+        console.error("Error creating villa:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-/* =========================================================
-   ۳. رزرو ویلا (بررسی تداخل تاریخ و ثبت رزرو)
-========================================================= */
-export const bookVilla = async (req, res) => {
-    try {
-        const villaId = req.params.id;
-        const { startDate, endDate, userId } = req.body;
-
-        if (!startDate || !endDate) {
-            return res.status(400).json({ message: "تاریخ شروع و پایان الزامی است." });
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        const villa = await Villa.findById(villaId);
-        if (!villa) return res.status(404).json({ message: "ویلا یافت نشد." });
-
-        const hasConflict = villa.bookedDates?.some(b => {
-            const bookedStart = new Date(b.start);
-            const bookedEnd = new Date(b.end);
-            return (start <= bookedEnd && end >= bookedStart);
-        });
-
-        if (hasConflict)
-            return res.status(409).json({ message: "این تاریخ قبلاً رزرو شده است." });
-
-        villa.bookedDates.push({ start, end, user: userId });
-        await villa.save();
-
-        res.status(201).json({
-            message: "رزرو با موفقیت ثبت شد.",
-            bookedDates: villa.bookedDates
-        });
-    } catch (error) {
-        console.error("❌ خطا در رزرو ویلا:", error);
-        res.status(500).json({ message: "مشکلی در سرور رخ داد." });
-    }
-};
-
-
-/* =========================================================
-   ۴. ثبت دیدگاه کاربر برای ویلا
-========================================================= */
+/**
+ * POST /api/villas/:id/review
+ */
 export const addReview = async (req, res) => {
     try {
-        const villaId = req.params.id;
-        const { userId, username, rating, text } = req.body;
+        const { user, username, rating, text } = req.body;
+        const villa = await Villa.findOne({ id: Number(req.params.id) });
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        if (!rating || !text) {
-            return res.status(400).json({ message: "امتیاز و متن دیدگاه الزامی است." });
-        }
-
-        const villa = await Villa.findById(villaId);
-        if (!villa) return res.status(404).json({ message: "ویلا پیدا نشد." });
-
-        const newReview = {
-            user: userId,
-            username,
-            rating: Number(rating),
-            text,
-            createdAt: new Date()
-        };
-
+        const newReview = { user, username, rating, text, createdAt: new Date() };
         villa.reviews.push(newReview);
 
-        // بروزرسانی میانگین امتیاز
-        const sum = villa.reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
-        villa.avgRating = (sum / villa.reviews.length).toFixed(1);
+        villa.numReviews = villa.reviews.length;
+        const avg = villa.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / villa.numReviews;
+        villa.avgRating = parseFloat(avg.toFixed(1));
 
         await villa.save();
 
         res.status(201).json({
-            message: "دیدگاه با موفقیت ثبت شد.",
-            reviews: villa.reviews,
-            avgRating: villa.avgRating
+            message: "Review added successfully",
+            numReviews: villa.numReviews,
+            avgRating: villa.avgRating,
+            review: newReview,
         });
     } catch (error) {
-        console.error("❌ خطا در ثبت دیدگاه:", error);
-        res.status(500).json({ message: "خطایی در سرور رخ داد." });
+        console.error("Error adding review:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
-/* =========================================================
-   ۵. پاسخ ادمین یا مالک ویلا به دیدگاه کاربر
-========================================================= */
-export const replyToReview = async (req, res) => {
+/**
+ * PUT /api/villas/:id/book
+ */
+export const bookVilla = async (req, res) => {
     try {
-        const { villaId, reviewId } = req.params;
-        const { replyText } = req.body;
+        const { start, end, user } = req.body;
+        const villa = await Villa.findOne({ id: Number(req.params.id) });
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        if (!replyText) {
-            return res.status(400).json({ message: "متن پاسخ الزامی است." });
-        }
-
-        const villa = await Villa.findById(villaId);
-        if (!villa) return res.status(404).json({ message: "ویلا پیدا نشد." });
-
-        const review = villa.reviews.id(reviewId);
-        if (!review) return res.status(404).json({ message: "دیدگاه پیدا نشد." });
-
-        review.reply = replyText;
+        villa.bookedDates.push({ start, end, user });
         await villa.save();
 
-        res.status(200).json({ message: "پاسخ ثبت شد.", review });
+        res.json({ message: "Villa booked successfully" });
     } catch (error) {
-        console.error("❌ خطا در پاسخ به دیدگاه:", error);
-        res.status(500).json({ message: "مشکلی در سرور رخ داد." });
+        console.error("Error booking villa:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+/**
+ * POST /api/villas/:villaId/reviews/:reviewId/reply
+ */
+export const replyToReview = async (req, res) => {
+    try {
+        const villa = await Villa.findOne({ id: Number(req.params.villaId) });
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
+
+        const review = villa.reviews.id(req.params.reviewId);
+        if (!review) return res.status(404).json({ message: "Review not found" });
+
+        review.reply = req.body.reply;
+        await villa.save();
+
+        res.json({ message: "Reply added successfully", review });
+    } catch (error) {
+        console.error("Error replying to review:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
