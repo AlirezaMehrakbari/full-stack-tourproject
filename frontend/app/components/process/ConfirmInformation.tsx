@@ -23,6 +23,7 @@ const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDe
         }
 
     }, [userSession.value.isLoggedIn]);
+    console.log(villaDetails)
 
     const handleSubmit = () => {
         // if (!userSession.value.isLoggedIn) {
@@ -36,7 +37,7 @@ const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDe
     return (
         <div>
             <Stepper isVilla={isVilla}/>
-            <div className='md:w-[60%] bg-[#FAFAF9] rounded-[14px] mx-auto mt-[10rem] shadow-md '>
+            <div className='md:w-[60%] bg-[#FAFAF9] rounded-[14px] mx-auto sm:mt-[10rem] shadow-md '>
                 <div className='p-4'>
                     <table className='text-center w-full'>
                         <tbody className='text-center'>
@@ -49,8 +50,8 @@ const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDe
                                     <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>ویلایــی</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
-                                    <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>مقصد</td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{villaDetails?.address.state} - {villaDetails?.address.city}</td>
+                                    <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>مکان</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{villaDetails?.province} - {villaDetails?.city}</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>

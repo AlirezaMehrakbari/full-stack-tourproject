@@ -40,11 +40,16 @@ const VillaItem: React.FC<VillaItemProps> = ({
         <div className="flex flex-col hover:text-[#000] group">
             <div className='relative'>
                 <Link href={`/villa/${id}`}>
-                    <Image
-                        className='rounded-[12px] object-cover object-center shadow-md hover:shadow-lg cursor-pointer h-[250px]'
-                        src={image}
-                        alt={title}
-                    />
+                    <div
+                    className={'relative w-full h-[250px]'}
+                    >
+                        <Image
+                            className='rounded-[12px] object-cover object-center shadow-md hover:shadow-lg cursor-pointer h-[250px]'
+                            src={image}
+                            alt={title}
+                            fill
+                        />
+                    </div>
                 </Link>
 
                 {userSession.value.isLoggedIn ?

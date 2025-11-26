@@ -1,13 +1,14 @@
 'use client';
-import { useQuery } from '@tanstack/react-query';
-import { tripTourApi } from '@/axios-instances';
+import {useQuery} from '@tanstack/react-query';
+import {tripTourApi} from '@/axios-instances';
 import Loading from '@/app/components/Loading';
 import useStep from '@/app/hooks/useStep';
 import VillaDetail from '@/app/components/villa/VillaDetail';
 import ConfirmInformation from '@/app/components/process/ConfirmInformation';
 import PaymentDetail from '@/app/components/process/PaymentDetail';
 import Receipt from '@/app/components/process/Receipt';
-import { mapVillaDataToFront } from '@/app/villa/_utils/mapVillaDataToFront';
+import {mapVillaDataToFront} from '@/app/villa/_utils/mapVillaDataToFront';
+import {getVillaDetail} from "@/app/villa/_api/getVillaDetail";
 
 type VillaDetailPageProps = {
     params: {
@@ -15,27 +16,24 @@ type VillaDetailPageProps = {
     };
 };
 
-const VillaDetailPage = ({ params }: VillaDetailPageProps) => {
+const VillaDetailPage = ({params}: VillaDetailPageProps) => {
     const villaId = params.villaId;
 
     // هوک useStep باید قبل از هر return یا شرط اجرا شود
     const step = useStep();
 
     // گرفتن اطلاعات ویلا با React Query
-    const { data, isLoading, isError } = useQuery({
+    const {data, isLoading, isError} = useQuery({
         queryKey: ['villaDetails', villaId],
         queryFn: async () => {
-            const res = await tripTourApi.get(`villas/${villaId}`);
-            console.log(res.data)
-            // اگر هنوز Mapper را نگه داشتی، از آن استفاده کن:
-            return mapVillaDataToFront(res.data);
-            // در صورت حذف mapper:
-            // return res.data;
+            const villa = await getVillaDetail(villaId);
+            return mapVillaDataToFront(villa);
         },
     });
+    console.log(data)
 
     // حالت‌های لودینگ، خطا و عدم داده
-    if (isLoading) return <Loading />;
+    if (isLoading) return <Loading/>;
     if (isError) return <p>Something went wrong!</p>;
     if (!data) return <p>Not Found!</p>;
 
@@ -46,13 +44,13 @@ const VillaDetailPage = ({ params }: VillaDetailPageProps) => {
 
         switch (step.step) {
             case 0:
-                return <VillaDetail villaDetails={data} />;
+                return <VillaDetail villaDetails={data}/>;
             case 2:
-                return <ConfirmInformation villaDetails={data} isVilla />;
+                return <ConfirmInformation villaDetails={data} isVilla/>;
             case 3:
-                return <PaymentDetail villaDetails={data} isVilla />;
+                return <PaymentDetail villaDetails={data} isVilla/>;
             case 4:
-                return <Receipt villaDetails={data} isVilla />;
+                return <Receipt villaDetails={data} isVilla/>;
             default:
                 return null;
         }

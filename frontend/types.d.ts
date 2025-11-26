@@ -61,15 +61,11 @@ type Facilities = {
     }
 }
 type Comments = {
-    id: number,
-    commentable_type: string,
-    commentable_id: string,
-    user_id: string,
-    comment: string,
-    rating: string,
-    parent_id: string,
-    created_at: string,
-    updated_at: string,
+    user: string
+    rating: number
+    comment: string
+    createdAt: string
+    _id: string
 }
 type User = {
     id: number,
@@ -95,6 +91,8 @@ type VillaDetails = {
     address: string
     meter: string,
     suitableFor: string,
+    province: string,
+    city: string,
     numberOfRooms: string,
     capacity: string,
     type: string,

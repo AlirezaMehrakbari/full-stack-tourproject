@@ -17,7 +17,7 @@ type VillaListProps = {
         pricePerNight: number;
         capacity: number;
         avgRating: number;
-        image: string | null;
+        images: string[] | null;
         province: string,
         numReviews: number
     }[];
@@ -63,11 +63,11 @@ const VillaList: React.FC<VillaListProps> = ({data}) => {
                 <VillaItem
                     key={villa.id}
                     id={villa.id}
-                    image={villa.image ? villa.image : fallbackImage}
+                    image={villa.images ? villa.images[0] : fallbackImage}
                     title={villa.title}
                     province={villa.province}
                     city={villa.city}
-                    price={villa.pricePerNight.toString()}
+                    price={villa.pricePerNight?.toString()}
                     Satisfaction={villa.avgRating}
                     opinion={villa.numReviews}
                     favoriteList={favoriteList}

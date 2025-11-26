@@ -9,10 +9,12 @@ export const mapVillaDataToFront = (apiData: VillaApiModel): VillaFrontModel => 
         address: apiData.address || "",
 
         meter: apiData.area?.toString() ?? "",
-        suitableFor: apiData.suitableFor || "",
+        suitableFor: apiData.suitableFor?.join("-") || "",
         numberOfRooms: apiData.numRooms?.toString() ?? "",
         constructionYear: apiData.constructionYear,
         capacity: apiData.capacity?.toString() ?? "",
+        province: apiData.province,
+        city: apiData.city,
         type: "",
         layer: apiData.floor?.toString() ?? "",
         pricePerNight: apiData.pricePerNight?.toString() ?? "",
@@ -41,17 +43,7 @@ export const mapVillaDataToFront = (apiData: VillaApiModel): VillaFrontModel => 
             },
         })),
 
-        comments: (apiData.reviews || []).map((r, i) => ({
-            id: i + 1,
-            commentable_type: "",
-            commentable_id: apiData.id.toString(),
-            user_id: r.user || "",
-            comment: r.text || "",
-            rating: r.rating?.toString() ?? "0",
-            parent_id: "",
-            created_at: r.createdAt || "",
-            updated_at: r.createdAt || "",
-        })),
+        comments: (apiData.reviews || []),
 
         user: {
             id: apiData.ownerId || 0,

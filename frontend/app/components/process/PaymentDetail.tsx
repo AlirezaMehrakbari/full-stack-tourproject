@@ -3,7 +3,7 @@ import PaymentDetailPicture from '@/public/images/PaymentDetailPicture.png'
 import Footer from "@/app/components/footer/footer";
 import useStep from "@/app/hooks/useStep";
 import Stepper from "@/app/components/Stepper";
-import React from "react";
+import React, {useEffect} from "react";
 import {useAppSelector} from "@/app/redux/store";
 import formatCurrency from "@/app/utils/FormatCurrency";
 import {tripTourApi} from "@/axios-instances";
@@ -11,6 +11,8 @@ import DateObject from "react-date-object";
 import {formatDateToShamsi} from "@/app/utils/FormatDateToShamsi";
 import {useRouter} from "next/navigation";
 import {toast} from 'react-toastify'
+import RegisterModal from "@/app/components/modals/RegisterModal";
+import useRegisterModal from "@/app/hooks/useRegisterModal";
 
 type PaymentDetailProps = {
     isVilla?: boolean,
@@ -18,9 +20,14 @@ type PaymentDetailProps = {
 }
 const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) => {
     const step = useStep()
+    const registerModal = useRegisterModal()
     const villaReserveDetail = useAppSelector(state => state.villaReserve)
     const userSession = useAppSelector(state => state.userSlice)
     const router = useRouter()
+    useEffect(() => {
+        registerModal.onOpen();
+    }, []);
+
 
     let checkIn = formatDateToShamsi(new DateObject(
         {
@@ -55,7 +62,7 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
         //         Authorization: `Bearer ${userSession.value.token}`
         //     }
         // }).then(res => {
-            step.nextStep()
+        step.nextStep()
         //     toast.success('رزور شما با موفقیت انجام شد.')
         //     // tripTourApi.get(`transactions/pay/${res.data.data.id}`, {
         //     //     headers: {
@@ -133,7 +140,7 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                         </svg>
                         <div className='flex flex-col'>
                             <p className='text-[11.2px] text-[#777]'>اطلاعات کاربــر</p>
-                            <p className='font-kalameh500'>{'علیرضا مهراکبری'}</p>
+                            <p className='font-kalameh500'>{userSession.value.fullName}</p>
                         </div>
                     </div>
                     <div className='flex items-center gap-3'>
@@ -228,7 +235,7 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                                 {villaReserveDetail.duration.map(day => {
                                     return (
                                         <div className='text-[10.6px] text-[#808080] flex justify-between'>
-                                            <p>{day.weekDay.name} {day.month.number} {day.month.name} ماه {day.year}</p>
+                                            <p>{day.weekDay.name} {day.day} {day.month.name} ماه {day.year}</p>
                                             <p>{villaDetails?.pricePerNight && formatCurrency(+villaDetails?.pricePerNight)} تومــان</p>
                                         </div>
                                     )

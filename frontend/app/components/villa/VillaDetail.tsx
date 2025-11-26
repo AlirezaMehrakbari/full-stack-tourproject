@@ -23,7 +23,6 @@ import {setVillaReserve} from "@/app/redux/slices/villaReserve-slice";
 import Loading from "@/app/components/Loading";
 
 const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
-    console.log(villaDetails)
     const step = useStep()
     const dispatch = useAppDispatch()
     const [firstMonth, setFirstMonth] = useState([
@@ -37,7 +36,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
     const [exitDate, setExitDate] = useState('')
     const [passengers, setPassengers] = useState<number>(0)
     const [isOpen, setIsOpen] = useState()
-    const { isLoggedIn } = useAppSelector((state) => state.userSlice.value);
+    const {isLoggedIn} = useAppSelector((state) => state.userSlice.value);
 
     const pictures = [
         {id: 1, src: Picture1},
@@ -68,16 +67,17 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
     return (
         <div>
             <Stepper isVilla/>
-            <div className='w-[80%] mx-auto lg:pt-[10rem]'>
+            <div className='w-[90%] mx-auto lg:pt-[10rem]'>
                 <section className='py-16 border-b-[0.7px] border-[#9E9E9E]'>
                     <div className='flex flex-col lg:flex-row pb-20'>
                         <div
                             className='flex flex-col lg:flex-row justify-between gap-x-[30px] gap-y-8 w-full lg:w-[70%]'>
-                            <div className='relative lg:w-[80%]'>
+                            <div className='relative lg:w-[80%] max-lg:h-60'>
                                 <Image
                                     className='rounded-[12px] object-cover object-center shadow-md hover:shadow-lg cursor-pointe h-full'
-                                    src={Picture}
+                                    src={villaDetails.medias[0]}
                                     alt={'Villa Picture'}
+                                    fill
                                 />
                                 <svg className='absolute left-[24px] top-[24px] group-hover:cursor-pointer'
                                      xmlns="http://www.w3.org/2000/svg" width="23" height="21" viewBox="0 0 23 21"
@@ -89,16 +89,19 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                         strokeLinejoin="round"/>
                                 </svg>
                             </div>
-                            <div className='lg:w-[25%] flex flex-row lg:flex-col justify-between'>
-                                {pictures.map(picture => {
+                            <div className='lg:w-[25%] flex flex-row lg:flex-col justify-between gap-2'>
+                                {villaDetails.medias.filter((item, index) => index < 3).map(picture => {
                                     return (
-                                        <>
+                                        <div
+                                            className={'relative w-full h-[100px] '}
+                                        >
                                             <Image
                                                 className='rounded-[12px] shadow-md max-lg:w-[30%] h-[100px] lg:h-[80px] xl:h-[110px] object-cover'
-                                                src={picture.src}
+                                                src={picture}
                                                 alt={'Villa Picture'}
+                                                fill
                                             />
-                                        </>
+                                        </div>
                                     )
                                 })}
                             </div>
@@ -110,7 +113,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                 <div className="flex-grow border-t border-[#DDD]"></div>
                             </div>
                             <div className='flex flex-col justify-between gap-y-4 lg:gap-y-8 lg:pt-4'>
-                                {villaDetails?.facilities
+                                {villaDetails?.facilities.filter((_, index) => index < 6)
                                     ?.map((item) => {
                                         return (
                                             <p
@@ -131,7 +134,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                     {/*}*/}
                                 </div>
                                 <dialog id="my_modal_2" className="modal">
-                                    <div className="modal-box">
+                                    <div className="modal-box bg-[#FFFFFF]">
                                         <div
                                             className='flex justify-center items-center border-b-[1px] border-[#BEBEBE] px-4'>
                                             <h1 className='font-kalameh500 text-[25px] pb-4'>امکانات رفاهی</h1>
@@ -162,9 +165,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                         <div
                             className='relative lg:w-[50%] border-[1px] border-[#E8E8E8] rounded-[30px] px-[20px] sm:px-[95px] py-[30px]'>
                             <p className='text-[#565656] text-justify'>
-                                سـفر خــوشی را بـرای شــما عزیـزان آرزومندیم و امیـدواریم میـــزبانـان
-                                خـوبی برای شما باشیـم تا بتوانیم خاطرات خوبـی را برایتان رقم بزنیم
-                                مجموعه ما با سابقه کاری چندساله ...
+                                {villaDetails.user.description}
                             </p>
                             <div className='absolute flex items-center top-[-2rem] right-8'>
                                 <Image
@@ -174,7 +175,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                 />
                                 <div className='flex items-center bg-[#F0F0F0] rounded-[10px] px-4 py-2 mr-[-10px]'>
                                     <p className='text-[11px] font-kalameh400'>به مـیزبانی :</p>
-                                    <p className='text-[17px] font-kalameh500 pr-2'>علـی حسـینی</p>
+                                    <p className='text-[17px] font-kalameh500 pr-2'>{villaDetails.user.firstName} {villaDetails.user.lastName}</p>
                                 </div>
                             </div>
                         </div>
@@ -186,8 +187,9 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                     <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.meter}</p>
                                 </div>
                                 <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
-                                    <p className='text-[12px] font-kalameh400 py-[12px] px-4'>مناسب برای</p>
-                                    <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.suitableFor}</p>
+                                    <p className='text-[12px] font-kalameh400 py-[12px] px-4 whitespace-nowrap'>مناسب
+                                        برای</p>
+                                    <p className='text-[12px] font-kalameh500 py-[12px] px-4 whitespace-nowrap'>{villaDetails?.suitableFor}</p>
                                 </div>
                                 <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
                                     <p className='text-[12px] font-kalameh400 py-[12px] px-4'>تعداد اتاق</p>
@@ -284,7 +286,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                             </div>
                         </div>
                         <div className='pt-20'>
-                            <Comments villaId={villaDetails.id} disabled={!isLoggedIn} />
+                            <Comments data={villaDetails.comments} villaId={villaDetails.id} disabled={!isLoggedIn}/>
                         </div>
                         {/*حالت موبایل انتخاب رزرو*/}
                         <div

@@ -1,24 +1,22 @@
 // app/types/VillaTypes.ts
 
 export type ReviewApi = {
-    _id: string;
-    user?: string;
-    username?: string;
-    rating?: number;
-    text?: string;
-    reply?: string;
-    createdAt?: string;
+    user: string
+    rating: number
+    comment: string
+    createdAt: string
+    _id: string
 };
 
 export type VillaApiModel = {
     id: number;
     title: string;
     description?: string;
-    city?: string;
-    province?: string;
+    city: string;
+    province: string;
     address?: string;
     area?: number;
-    suitableFor?: string;
+    suitableFor?: string[];
     numRooms?: number;
     floor?: number;
     capacity?: number;
@@ -59,6 +57,8 @@ export type VillaFrontModel = {
     created_at: string;
     updated_at: string;
     constructionYear: number,
+    province: string;
+    city: string;
     medias: string[];
     rating_comment: {
         averageRating: number;
@@ -76,17 +76,7 @@ export type VillaFrontModel = {
             facility_id: string;
         };
     }[];
-    comments: {
-        id: number;
-        commentable_type: string;
-        commentable_id: string;
-        user_id: string;
-        comment: string;
-        rating: string;
-        parent_id: string;
-        created_at: string;
-        updated_at: string;
-    }[];
+    comments: ReviewApi[];
     user: {
         id: number;
         firstName: string;
