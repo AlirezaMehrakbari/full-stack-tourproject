@@ -1,8 +1,6 @@
 import Villa from "../models/Villa.js";
 
-/**
- * Helper: اطمینان از وجود تمام فیلدها در خروجی (فقط در getVillaById)
- */
+
 const ensureAllFields = (villaDoc) => {
     const villa = villaDoc.toObject();
 
@@ -10,7 +8,7 @@ const ensureAllFields = (villaDoc) => {
         description: "",
         address: "",
         area: null,
-        suitableFor: "",
+        suitableFor: [],
         numRooms: null,
         floor: null,
         constructionYear: null,
@@ -24,9 +22,9 @@ const ensureAllFields = (villaDoc) => {
         avgRating: 0,
         numReviews: 0,
         bookedDates: [],
+        rules: []
     };
 
-    // با گشتن روی defaults مقادیر خالی اضافه کن
     for (const [key, val] of Object.entries(defaults)) {
         if (!villa.hasOwnProperty(key)) villa[key] = val;
     }
@@ -34,10 +32,7 @@ const ensureAllFields = (villaDoc) => {
     return villa;
 };
 
-/**
- * GET /api/villas
- * لیست همه ویلاها (خروجی سبک)
- */
+
 export const getAllVillas = async (req, res) => {
     try {
         const filter = {};
@@ -63,18 +58,13 @@ export const getAllVillas = async (req, res) => {
             .select("id title city province pricePerNight capacity avgRating numReviews images numRooms area")
             .sort({ id: 1 });
 
-        // خروجی ساده بدون اجباری کردن فیلدهای خالی
         res.status(200).json(villas);
     } catch (error) {
-        console.error("Error fetching villas:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
 
-/**
- * GET /api/villas/:id
- * جزئیات کامل ویلا با تضمین تمام فیلدها
- */
+
 export const getVillaById = async (req, res) => {
     try {
         const villaId = Number(req.params.id);
@@ -82,73 +72,28 @@ export const getVillaById = async (req, res) => {
 
         if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        // اینجا تضمین می‌کنیم همه فیلدها بیان
         const formatted = ensureAllFields(villa);
 
         res.status(200).json(formatted);
     } catch (error) {
-        console.error("Error getting villa:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
 
-/**
- * POST /api/villas
- * افزودن ویلا جدید
- */
+
 export const createVilla = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            city,
-            province,
-            address,
-            area,
-            suitableFor,
-            numRooms,
-            floor,
-            constructionYear,
-            capacity,
-            pricePerNight,
-            pricePerPerson,
-            ownerName,
-            ownerDescription,
-            images,
-            facilities,
-        } = req.body;
+        const data = { ...req.body };
+        delete data._id;
+        delete data.id;
 
-        const villa = new Villa({
-            title,
-            description,
-            city,
-            province,
-            address,
-            area,
-            suitableFor,
-            numRooms,
-            floor,
-            constructionYear,
-            capacity,
-            pricePerNight,
-            pricePerPerson,
-            ownerName,
-            ownerDescription,
-            images,
-            facilities,
-        });
+        const villa = new Villa(data);
 
         await villa.save();
 
         res.status(201).json({
-            id: villa.id,
-            title: villa.title,
-            city: villa.city,
-            province: villa.province,
-            pricePerNight: villa.pricePerNight,
-            capacity: villa.capacity,
-            numRooms: villa.numRooms,
-            area: villa.area,
+            message: "Villa created successfully",
+            villa
         });
     } catch (error) {
         console.error("Error creating villa:", error);
@@ -156,58 +101,61 @@ export const createVilla = async (req, res) => {
     }
 };
 
-/**
- * POST /api/villas/:id/review
- */
+
+
 export const addReview = async (req, res) => {
     try {
-        const { user, username, rating, text } = req.body;
+        const { user, username, rating, comment } = req.body;
+
         const villa = await Villa.findOne({ id: Number(req.params.id) });
         if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        const newReview = { user, username, rating, text, createdAt: new Date() };
+        const newReview = {
+            user,
+            username,
+            rating,
+            comment,
+            createdAt: new Date()
+        };
+
         villa.reviews.push(newReview);
 
         villa.numReviews = villa.reviews.length;
-        const avg = villa.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / villa.numReviews;
-        villa.avgRating = parseFloat(avg.toFixed(1));
+        villa.avgRating =
+            villa.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) /
+            villa.numReviews;
 
         await villa.save();
 
         res.status(201).json({
             message: "Review added successfully",
-            numReviews: villa.numReviews,
             avgRating: villa.avgRating,
-            review: newReview,
+            numReviews: villa.numReviews,
+            review: newReview
         });
     } catch (error) {
-        console.error("Error adding review:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
 
-/**
- * PUT /api/villas/:id/book
- */
 export const bookVilla = async (req, res) => {
     try {
-        const { start, end, user } = req.body;
+        const { from, to, user } = req.body;
+
         const villa = await Villa.findOne({ id: Number(req.params.id) });
         if (!villa) return res.status(404).json({ message: "Villa not found" });
 
-        villa.bookedDates.push({ start, end, user });
+        villa.bookedDates.push({ from, to, user });
+
         await villa.save();
 
         res.json({ message: "Villa booked successfully" });
     } catch (error) {
-        console.error("Error booking villa:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
 
-/**
- * POST /api/villas/:villaId/reviews/:reviewId/reply
- */
+
 export const replyToReview = async (req, res) => {
     try {
         const villa = await Villa.findOne({ id: Number(req.params.villaId) });
@@ -217,11 +165,11 @@ export const replyToReview = async (req, res) => {
         if (!review) return res.status(404).json({ message: "Review not found" });
 
         review.reply = req.body.reply;
+
         await villa.save();
 
         res.json({ message: "Reply added successfully", review });
     } catch (error) {
-        console.error("Error replying to review:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
