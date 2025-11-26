@@ -20,13 +20,9 @@ type PaymentDetailProps = {
 }
 const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) => {
     const step = useStep()
-    const registerModal = useRegisterModal()
     const villaReserveDetail = useAppSelector(state => state.villaReserve)
     const userSession = useAppSelector(state => state.userSlice)
     const router = useRouter()
-    useEffect(() => {
-        registerModal.onOpen();
-    }, []);
 
 
     let checkIn = formatDateToShamsi(new DateObject(
@@ -79,8 +75,8 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
         <div>
             <Stepper isVilla={isVilla}/>
             <form
-                className='flex flex-col-reverse md:flex-row items-center gap-x-[6rem] w-[80%] mx-auto mt-4 md:mt-[10rem]'>
-                <div className='flex flex-col gap-y-6 w-[50%] border-b-[1px] pb-8 border-[#BFBFBF]'>
+                className='flex flex-col lg:flex-row items-center gap-x-[6rem] w-[80%] mx-auto mt-4 md:mt-[10rem]'>
+                <div className='w-full flex flex-col gap-y-6 lg:w-[50%] pb-8 border-[#BFBFBF]'>
                     <h1 className='md:text-[28.2px] font-kalameh400 border-b-[1px] border-[#BFBFBF] py-4'>جزئـیات خـریـد
                         شـما</h1>
                     <div className='flex items-center gap-3'>
@@ -207,18 +203,36 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                         </div>
                     </div>
                 </div>
-                <div className='md:w-[40%] bg-[#F9F9F9] px-[30px] lg:pr-[56px] py-[32px] rounded-[12px] shadow-md'>
-                    <div className='flex max-md:items-center flex-col lg:flex-row gap-x-6'>
-                        <Image
-                            className='w-[50%] rounded-[15px]'
-                            src={PaymentDetailPicture}
-                            alt={'PaymentDetail Picture'}
-                        />
+                <div
+                    className='w-full md:w-[90%] lg:w-[40%] bg-[#F9F9F9] px-[30px] lg:pr-[56px] py-[32px] rounded-[12px] shadow-md'>
+                    <div className='flex max-md:items-center flex-col gap-x-6'>
+                        {
+                            isVilla ?
+                                <div
+                                    className={'relative w-full h-[200px]'}>
+                                    <Image
+                                        className='rounded-[15px]'
+                                        src={villaDetails?.medias[0] || PaymentDetailPicture}
+                                        alt={'PaymentDetail Picture'}
+                                        fill
+                                    />
+                                </div>
+                                :
+                                <div
+                                    className={'relative w-[50%] h-50'}>
+                                    <Image
+                                        className='rounded-[15px]'
+                                        src={PaymentDetailPicture}
+                                        alt={'PaymentDetail Picture'}
+                                        fill
+                                    />
+                                </div>
+                        }
                         <div className='flex flex-col py-2'>
                             {isVilla ? (
                                 <>
                                     <p className='text-[14.3px] font-kalameh400'>{villaDetails?.title}</p>
-                                    <p className='text-[11px] text-[#777676]'>{villaDetails?.address.state}</p>
+                                    <p className='text-[11px] text-[#777676]'>{villaDetails?.province}</p>
                                 </>
                             ) : (
                                 <>

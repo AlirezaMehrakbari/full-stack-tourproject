@@ -7,6 +7,7 @@ import {ToastContainer} from "react-toastify";
 import React from "react";
 import RegisterModal from "@/app/components/modals/RegisterModal";
 import ToastContainerApp from "@/app/utils/ToastContainer";
+import AuthInitializer from "@/app/providers/AuthInitializer";
 
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
             <ReduxProvider>
                 <ToastContainerApp/>
                 {children}
+                <AuthInitializer/>
                 <RegisterModal/>
             </ReduxProvider>
             </body>

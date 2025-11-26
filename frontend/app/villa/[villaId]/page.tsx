@@ -36,7 +36,7 @@ const VillaDetailPage = ({params}: VillaDetailPageProps) => {
     if (isLoading) return <Loading/>;
     if (isError) return <p>Something went wrong!</p>;
     if (!data) return <p>Not Found!</p>;
-
+console.log(step)
     // تعیین بخش نمایش بر اساس step فعلی
     const getSectionComponent = () => {
         // هر تغییر در step باعث scroll به بالا می‌شود

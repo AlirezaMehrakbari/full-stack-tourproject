@@ -1,5 +1,6 @@
 import {createSlice} from "@reduxjs/toolkit";
 type durationType = {
+    day: number;
     weekDay : {
         name : string
     }
