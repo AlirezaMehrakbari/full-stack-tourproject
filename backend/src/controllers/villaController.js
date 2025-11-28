@@ -1,4 +1,5 @@
 import Villa from "../models/Villa.js";
+import User from "../models/User.js";
 
 
 const ensureAllFields = (villaDoc) => {
@@ -171,5 +172,142 @@ export const replyToReview = async (req, res) => {
         res.json({ message: "Reply added successfully", review });
     } catch (error) {
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+function calculateNights(from, to) {
+    const start = new Date(from);
+    const end = new Date(to);
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+}
+
+export const getLastUserReservation = async (req, res) => {
+    try {
+        console.log('\n=== GET LAST RESERVATION ===');
+        console.log('req.user:', req.user);
+        console.log('User ID:', req.user?.id);
+
+        if (!req.user || !req.user.id) {
+            console.log('❌ No user in request');
+            return res.status(401).json({ message: "Unauthorized - no user" });
+        }
+
+        console.log('Searching for user:', req.user.id);
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            console.log('❌ User not found in database');
+            return res.status(401).json({ message: "Unauthorized - user not found" });
+        }
+
+        console.log('✅ User found:', user.email);
+        console.log('Searching for villas with this user\'s reservations...');
+
+        const villas = await Villa.find({
+            'books.user': req.user.id
+        }).sort({ 'books.from': -1 });
+
+        console.log('Villas found:', villas.length);
+
+        if (!villas || villas.length === 0) {
+            console.log('No villas with reservations found');
+            return res.json({ message: "No reservations found", reservation: null });
+        }
+
+        let lastReservation = null;
+        let lastVilla = null;
+
+        for (const villa of villas) {
+            const userBooks = villa.books.filter(
+                book => book.user.toString() === req.user.id
+            );
+
+            console.log(`Villa ${villa.title}: ${userBooks.length} reservations`);
+
+            for (const book of userBooks) {
+                if (!lastReservation || new Date(book.from) > new Date(lastReservation.from)) {
+                    lastReservation = book;
+                    lastVilla = villa;
+                }
+            }
+        }
+
+        if (!lastReservation) {
+            console.log('No reservation found for this user');
+            return res.json({ message: "No reservations found", reservation: null });
+        }
+
+        console.log('✅ Last reservation found');
+
+        res.json({
+            villa: {
+                id: lastVilla._id,
+                title: lastVilla.title,
+                images: lastVilla.images
+            },
+            reservation: {
+                from: lastReservation.from,
+                to: lastReservation.to,
+                totalPrice: lastReservation.totalPrice,
+                status: lastReservation.status
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error in getLastUserReservation:', error);
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+
+
+export const getUserReservations = async (req, res) => {
+    try {
+        console.log('=== getUserReservations START ===');
+        console.log('req.user:', req.user);
+        console.log('req.userId:', req.userId);
+
+        const userId = req.user?.id || req.userId;
+
+        if (!userId) {
+            console.log('ERROR: No userId found');
+            return res.status(401).json({
+                message: "Unauthorized - user not found"
+            });
+        }
+
+        console.log('Searching for user:', userId);
+        const userExists = await User.findById(userId);
+        console.log('User exists:', !!userExists);
+
+        if (!userExists) {
+            return res.status(404).json({
+                message: "User not found in database"
+            });
+        }
+
+        console.log('Fetching reservations for user:', userId);
+        const reservations = await Book.find({ user: userId })
+            .populate('villa')
+            .sort({ createdAt: -1 });
+
+        console.log('Reservations count:', reservations.length);
+        console.log('=== getUserReservations END ===');
+
+        res.status(200).json(reservations);
+
+    } catch (error) {
+        console.error('=== ERROR in getUserReservations ===');
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+
+        res.status(500).json({
+            message: "Server error",
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };

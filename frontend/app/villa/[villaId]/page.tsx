@@ -19,10 +19,9 @@ type VillaDetailPageProps = {
 const VillaDetailPage = ({params}: VillaDetailPageProps) => {
     const villaId = params.villaId;
 
-    // هوک useStep باید قبل از هر return یا شرط اجرا شود
     const step = useStep();
 
-    // گرفتن اطلاعات ویلا با React Query
+
     const {data, isLoading, isError} = useQuery({
         queryKey: ['villaDetails', villaId],
         queryFn: async () => {
@@ -32,14 +31,13 @@ const VillaDetailPage = ({params}: VillaDetailPageProps) => {
     });
     console.log(data)
 
-    // حالت‌های لودینگ، خطا و عدم داده
+
     if (isLoading) return <Loading/>;
     if (isError) return <p>Something went wrong!</p>;
     if (!data) return <p>Not Found!</p>;
-console.log(step)
-    // تعیین بخش نمایش بر اساس step فعلی
+
     const getSectionComponent = () => {
-        // هر تغییر در step باعث scroll به بالا می‌شود
+
         window.scrollTo(0, 0);
 
         switch (step.step) {

@@ -4,23 +4,23 @@ import jwt from "jsonwebtoken";
 
 export const enterPhoneNumber = async (req, res) => {
     try {
-        const { phoneNumber } = req.body;
+        const {phoneNumber} = req.body;
 
         const code = Math.floor(1000 + Math.random() * 9000);
 
-        let user = await User.findOne({ phoneNumber });
+        let user = await User.findOne({phoneNumber});
 
         if (user) {
             user.verificationCode = code;
             user.verificationCodeExpires = Date.now() + 2 * 60 * 1000;
-            await user.save({ validateBeforeSave: false });
+            await user.save({validateBeforeSave: false});
         } else {
             user = new User({
                 phoneNumber,
                 verificationCode: code,
                 verificationCodeExpires: Date.now() + 2 * 60 * 1000,
             });
-            await user.save({ validateBeforeSave: false });
+            await user.save({validateBeforeSave: false});
         }
 
         return res.status(200).json({
@@ -31,24 +31,24 @@ export const enterPhoneNumber = async (req, res) => {
 
     } catch (error) {
         console.log("ENTER PHONE ERROR:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({message: "Server error"});
     }
 };
 
 
 export const phoneNumberVerification = async (req, res) => {
     try {
-        const { phoneNumber, code } = req.body;
+        const {phoneNumber, code} = req.body;
 
-        const user = await User.findOne({ phoneNumber });
+        const user = await User.findOne({phoneNumber});
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({message: "User not found"});
 
         if (user.verificationCode !== code)
-            return res.status(400).json({ message: "Invalid verification code" });
+            return res.status(400).json({message: "Invalid verification code"});
 
         if (Date.now() > user.verificationCodeExpires)
-            return res.status(400).json({ message: "Verification code expired" });
+            return res.status(400).json({message: "Verification code expired"});
 
         return res.json({
             message: "Verified",
@@ -58,25 +58,24 @@ export const phoneNumberVerification = async (req, res) => {
 
     } catch (error) {
         console.log("VERIFICATION ERROR:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({message: "Server error"});
     }
 };
 
 
-
 export const login = async (req, res) => {
     try {
-        const { phoneNumber } = req.body;
+        const {phoneNumber} = req.body;
 
-        const user = await User.findOne({ phoneNumber });
+        const user = await User.findOne({phoneNumber});
 
         if (!user)
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({message: "User not found"});
 
         const token = jwt.sign(
-            { id: user._id },
+            {id: user._id},
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {expiresIn: "7d"}
         );
 
         return res.json({
@@ -87,16 +86,16 @@ export const login = async (req, res) => {
 
     } catch (error) {
         console.log("LOGIN ERROR:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({message: "Server error"});
     }
 };
 
 
 export const register = async (req, res) => {
     try {
-        const { firstName, lastName, phoneNumber, role } = req.body;
+        const {firstName, lastName, phoneNumber, role} = req.body;
 
-        let user = await User.findOne({ phoneNumber });
+        let user = await User.findOne({phoneNumber});
 
 
         if (user) {
@@ -120,7 +119,7 @@ export const register = async (req, res) => {
                 role: user.role
             },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {expiresIn: "7d"}
         );
 
         return res.status(201).json({
@@ -131,20 +130,26 @@ export const register = async (req, res) => {
 
     } catch (error) {
         console.log("REGISTER ERROR:", error);
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({message: "Server error"});
     }
 };
 
 
 export const getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.userId).select("-__v -updatedAt -createdAt");
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({message: "Unauthorized"});
+        }
+        const user = await User.findById(req.user.id).select('-password');
 
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) {
+            return res.status(404).json({message: "User not found"});
+        }
 
-        res.json({ user });
-    } catch (e) {
-        res.status(500).json({ message: "Server error" });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({message: "Server error", error: error.message});
     }
 };
+
 

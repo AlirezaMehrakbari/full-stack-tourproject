@@ -17,11 +17,11 @@ export default function AuthInitializer() {
         })
             .then(res => {
                 dispatch(logIn({
-                    id: res.data.user._id,
-                    firstName: res.data.user.firstName,
-                    lastName: res.data.user.lastName,
-                    phoneNumber: res.data.user.phoneNumber,
-                    role: res.data.user.role,
+                    id: res.data._id,
+                    firstName: res.data.firstName,
+                    lastName: res.data.lastName,
+                    phoneNumber: res.data.phoneNumber,
+                    role: res.data.role,
                     token
                 }))
             })

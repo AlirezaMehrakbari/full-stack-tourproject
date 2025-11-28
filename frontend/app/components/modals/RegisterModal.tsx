@@ -193,24 +193,24 @@ const RegisterModal = () => {
                     <p className='text-[14px] text-[#979797]'>{phoneNumber}</p>
                 </div>
 
-                <div className='flex items-center justify-between py-2' dir='ltr'>
+                <div className='grid grid-cols-4 gap-2 items-center justify-between py-2' dir='ltr'>
                     <input maxLength={1}
-                           className='w-[20%] text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
+                           className='text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
                            {...register('digit1', { required: true })}
                            onChange={(e) => e.target.value && setFocus('digit2')}
                     />
                     <input maxLength={1}
-                           className='w/[20%] text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
+                           className='text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
                            {...register('digit2', { required: true })}
                            onChange={(e) => e.target.value && setFocus('digit3')}
                     />
                     <input maxLength={1}
-                           className='w/[20%] text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
+                           className='text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
                            {...register('digit3', { required: true })}
                            onChange={(e) => e.target.value && setFocus('digit4')}
                     />
                     <input maxLength={1}
-                           className='w/[20%] text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
+                           className='text-center bg-[#EDECEC] px-2 py-3 rounded-[5px]'
                            {...register('digit4', { required: true })}
                     />
                 </div>
@@ -258,7 +258,7 @@ const RegisterModal = () => {
 
     return (
         <div className={`${registerModal.isOpen ? 'block' : 'hidden'} fixed bg-neutral-800/70 inset-0 flex justify-center items-center z-50`}>
-            <div className='relative w/[90%] md:w/[60%] lg:w/[40%] bg-white rounded/[5px]'>
+            <div className='relative w-[90%] md:w-[60%] lg:w-[40%] bg-white rounded/[5px]'>
 
                 <button
                     onClick={() => {

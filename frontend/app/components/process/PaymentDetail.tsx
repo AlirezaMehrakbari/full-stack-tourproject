@@ -45,32 +45,45 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
             day: villaReserveDetail.exitDate?.day,
 
         }).format())
-    const handlePayment = (e: any) => {
-        e.preventDefault()
-        // tripTourApi.post('reservations/reservationPlace', {
-        //     place_id: villaDetails?.id,
-        //     checkIn,
-        //     checkOut,
-        //     number: villaReserveDetail.passengers
-        // }, {
-        //     headers: {
-        //         "Content-Type": 'application/json',
-        //         Authorization: `Bearer ${userSession.value.token}`
-        //     }
-        // }).then(res => {
-        step.nextStep()
-        //     toast.success('رزور شما با موفقیت انجام شد.')
-        //     // tripTourApi.get(`transactions/pay/${res.data.data.id}`, {
-        //     //     headers: {
-        //     //         Authorization: `Bearer ${userSession.value.token}`
-        //     //     }
-        //     // }).then(res => {
-        //     //     router.push(`${res.data.paymentUrl}`)
-        //     // })
-        // }).catch(error => {
-        //     console.log(error)
-        // })
-    }
+    const handlePayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!userSession.value.token) {
+            toast.error("ابتدا وارد حساب کاربری شوید");
+            useRegisterModal().onOpen();
+            return;
+        }
+
+        try {
+            const res = await tripTourApi.post(
+                `villas/${villaDetails?.id}/book`,
+                {
+                    from: checkIn,
+                    to: checkOut,
+                    user: userSession.value.id
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${userSession.value.token}`
+                    }
+                }
+            );
+
+            toast.success("رزرو شما با موفقیت ثبت شد");
+
+            router.push("/profile/reservations");
+
+        } catch (error: any) {
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            } else {
+                toast.error("خطا در رزرو. لطفا دوباره امتحان کنید.");
+            }
+            console.log(error);
+        }
+    };
+
     return (
         <div>
             <Stepper isVilla={isVilla}/>
