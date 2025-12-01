@@ -14,9 +14,17 @@ export default function ProfileLayout({
     return (
         <section>
             <ProfileNavbar/>
-            <div className='flex flex-col md:flex-row gap-x-8'>
-                <Sidebar/>
-                {children}
+            <div className='grid overflow-hidden grid-cols-1 items-start lg:grid-cols-4 px-4'>
+                <div
+                    className={'flex items-center justify-center col-span-1'}
+                >
+                    <Sidebar/>
+                </div>
+                <div
+                    className={'col-span-3 max-lg:pt-8'}
+                >
+                    {children}
+                </div>
             </div>
         </section>
 

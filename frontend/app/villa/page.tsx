@@ -57,7 +57,6 @@ const VillaHomePage = () => {
         setFilters(newFilters);
     };
 
-    // ⚡ دریافت داده‌ها با React Query
     const { data: villas, isLoading, isError } = useQuery({
         queryKey: ['villas', filters],
         queryFn: () => getVillaList(filters),
@@ -74,14 +73,12 @@ const VillaHomePage = () => {
                         alt="Villa Home Picture"
                     />
 
-                    {/* 🔻 فیلتر فرم */}
                     <div className="w-[90%] mx-auto absolute bottom-0 xl:bottom-[-2rem] inset-x-0">
                         <Layout>
                             <form
                                 onSubmit={handleFilterSubmit}
                                 className="flex flex-col xl:flex-row justify-between items-center gap-x-8 gap-y-6 w-full"
                             >
-                                {/* مقصد */}
                                 <div>
                                     <p className="sm:text-[20.6px] font-kalameh700 text-white">کجا میخوای بری؟</p>
                                     <SelectDropDown
@@ -103,7 +100,6 @@ const VillaHomePage = () => {
                                     </SelectDropDown>
                                 </div>
 
-                                {/* تاریخ */}
                                 <div>
                                     <p className="sm:text-[20.6px] font-kalameh700 text-white">کی میخوای بری؟</p>
                                     <DatePicker
@@ -123,7 +119,6 @@ const VillaHomePage = () => {
                                     />
                                 </div>
 
-                                {/* تعداد نفرات */}
                                 <div>
                                     <p className="sm:text-[20.6px] font-kalameh700 text-white">چند نفر؟</p>
                                     <SelectDropDown
@@ -143,7 +138,6 @@ const VillaHomePage = () => {
                                     </SelectDropDown>
                                 </div>
 
-                                {/* دکمه */}
                                 <button className="text-[22px] font-kalameh500 bg-[#83734E] text-white px-8 py-2 rounded-full">
                                     فیلتر
                                 </button>
@@ -152,7 +146,6 @@ const VillaHomePage = () => {
                     </div>
                 </div>
 
-                {/* 🔻 لیست ویلاها */}
                 <h1 className="text-[32px] font-kalameh700 pt-[110px] pb-10">اجاره ویلا در سراسر کشور</h1>
 
                 {isLoading && (

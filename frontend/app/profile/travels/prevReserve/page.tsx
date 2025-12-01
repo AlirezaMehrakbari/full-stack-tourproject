@@ -7,8 +7,17 @@ import SelectDropDown from "@/app/components/dropDown/SelectDropDown"
 import {getAllReservations} from "@/app/profile/travels/_api/getAllReservation";
 
 interface Reservation {
-    _id: string;
-
+    _id: string
+    title: string
+    province: string
+    city: string
+    from: string
+    to: string
+    pricePerNight: number
+    capacity: number
+    nights: number
+    totalPrice: number
+    imageUrl: string
 }
 
 const PrevReserve = () => {
@@ -66,32 +75,32 @@ const PrevReserve = () => {
 
     return (
         <div className='w-[90%] mx-auto flex flex-col'>
-            <h1 className="mr-[338px]">سفر های من</h1>
+            <h1 className="flex items-center justify-center mx-auto">سفر های من</h1>
 
-            <div className="flex flex-row-reverse justify-between pb-10 pt-7">
-                <div className="w-[70%] mr-[70px] mx-auto flex flex-col rounded-md py-8">
-                    <div className='flex w-full border-b border-[#D3D3D3]'>
-                        <Link href={'./travels'}>
+            <div className="flex flex-row-reverse justify-between pb-10">
+                <div className="w-full mx-auto flex flex-col rounded-md py-8">
+                    <div className='flex w-full gap-x-6 border-b border-[#D3D3D3]'>
+                        <Link href={'/profile/travels'}>
                             <p className='pb-2 text-[#8B8B8B]'>آخرین رزرو</p>
                         </Link>
 
-                        <p className='mx-7 pb-2 text-[#000] border-b-2'>رزروهای قبلی</p>
+                        <p className='pb-2 text-[#000] border-b-2'>رزروهای قبلی</p>
                     </div>
 
-                    <div className='flex justify-end py-3'>
-                        <SelectDropDown
-                            label={'دسته بندی براساس ماه'}
-                            styles={'relative bg-[#465297] text-white px-4 py-2 cursor-pointer rounded-[8px]'}
-                            dropDownStyles={'bg-[#465297] absolute w-full bottom-[-8.5rem] rounded-bl-[8px] rounded-br-[8px] py-2 px-4 text-[13px]'}
-                            labelStyles={'text-[13px]'}
-                        >
-                            <ul className='flex flex-col gap-y-2 items-center'>
-                                <li className='cursor-pointer hover:text-[#FFE712]'>مهر 1402</li>
-                                <li className='cursor-pointer hover:text-[#FFE712]'>شهریور 1402</li>
-                                <li className='cursor-pointer hover:text-[#FFE712]'>مرداد 1402</li>
-                            </ul>
-                        </SelectDropDown>
-                    </div>
+                    {/*<div className='flex justify-end py-3'>*/}
+                    {/*    <SelectDropDown*/}
+                    {/*        label={'دسته بندی براساس ماه'}*/}
+                    {/*        styles={'relative bg-[#465297] text-white px-4 py-2 cursor-pointer rounded-[8px]'}*/}
+                    {/*        dropDownStyles={'bg-[#465297] absolute w-full bottom-[-8.5rem] rounded-bl-[8px] rounded-br-[8px] py-2 px-4 text-[13px]'}*/}
+                    {/*        labelStyles={'text-[13px]'}*/}
+                    {/*    >*/}
+                    {/*        <ul className='flex flex-col gap-y-2 items-center'>*/}
+                    {/*            <li className='cursor-pointer hover:text-[#FFE712]'>مهر 1402</li>*/}
+                    {/*            <li className='cursor-pointer hover:text-[#FFE712]'>شهریور 1402</li>*/}
+                    {/*            <li className='cursor-pointer hover:text-[#FFE712]'>مرداد 1402</li>*/}
+                    {/*        </ul>*/}
+                    {/*    </SelectDropDown>*/}
+                    {/*</div>*/}
 
                     <div className='flex flex-col'>
                         {renderContent()}

@@ -1,20 +1,29 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import Link from 'next/link'
+import {useQuery} from '@tanstack/react-query'
 import Reserve from '@/app/components/profile/Reserve'
-import { useAppSelector } from "@/app/redux/store"
-import {getLastReservation} from "@/app/profile/travels/_api/getLastReservation";
+import Link from 'next/link'
+import {getLastReservation} from './_api/getLastReservation'
+
+interface ReservationData {
+    title: string
+    province: string
+    city: string
+    from: string
+    to: string
+    pricePerNight: number
+    capacity: number
+    nights: number
+    totalPrice: number
+    imageUrl: string
+}
 
 const Travels = () => {
-    const userSession = useAppSelector(state => state.userSlice)
-
     const {
-        data: lastReservation,
+        data: reservation,
         isLoading,
-        error,
         isError
-    } = useQuery({
+    } = useQuery<ReservationData | null>({
         queryKey: ['lastReservation'],
         queryFn: getLastReservation,
         staleTime: 5 * 60 * 1000,
@@ -25,9 +34,8 @@ const Travels = () => {
         if (isLoading) {
             return (
                 <div className='px-4 py-6'>
-                    <div className='animate-pulse space-y-4'>
-                        <div className='h-4 bg-gray-200 rounded w-3/4'></div>
-                        <div className='h-4 bg-gray-200 rounded w-1/2'></div>
+                    <div className='animate-pulse'>
+                        <div className='h-32 bg-gray-200 rounded'></div>
                     </div>
                 </div>
             )
@@ -37,55 +45,47 @@ const Travels = () => {
             return (
                 <div className='px-4 py-6'>
                     <p className='text-red-500 mb-2'>خطا در دریافت اطلاعات</p>
-                    <p className='text-sm text-gray-600'>
-                        {error instanceof Error ? error.message : 'لطفا دوباره تلاش کنید'}
-                    </p>
+                    <p className='text-sm text-gray-600'>لطفا دوباره تلاش کنید</p>
                 </div>
             )
         }
 
-        if (!lastReservation?.reservation) {
+        if (!reservation) {
             return (
                 <p className='px-4 py-6 text-gray-500'>
-                    هنوز رزروی ثبت نشده است.
+                    رزروی یافت نشد.
                 </p>
             )
         }
 
-        return <Reserve data={lastReservation} />
+        return (
+            <div className='my-[60px]'>
+                <div className='flex w-[75%] border-b border-[#D3D3D3] mx-4'>
+                    <p className='pb-4'>جزئیات رزرو شما</p>
+                </div>
+                <Reserve data={reservation}/>
+            </div>
+        )
     }
 
     return (
-        <div className='w-full md:w-[60%] flex flex-col pr-8'>
+        <div className='w-[90%] mx-auto flex flex-col'>
+            <h1 className="flex items-center justify-center mx-auto">سفر های من</h1>
 
-            <h1 className="font-kalameh700">سفر های من</h1>
+            <div className="flex flex-row-reverse justify-between pb-10">
+                <div className="w-full mx-auto flex flex-col rounded-md py-8">
+                    <div className='flex w-full gap-x-6 border-b border-[#D3D3D3]'>
+                        <p className='pb-2 text-[#000] border-b-2'>آخرین رزرو</p>
 
-            <div className="w-full flex flex-col justify-between pb-10 pt-7 md:flex-row">
-
-                <div className="w-[70%] flex flex-col rounded-md py-8">
-
-                    <div className='flex w-[100%] border-b border-[#D3D3D3] md:w-[40%]'>
-                        <Link href={'./travels'}>
-                            <p className='pb-2 font-kalameh500 text-[#000] border-b-2'>آخرین رزرو</p>
-                        </Link>
-
-                        <Link href={'./travels/prevReserve'}>
-                            <p className='mx-7 pb-2 font-kalameh500 text-[#8B8B8B] text-[15px]'>رزروهای قبلی</p>
+                        <Link href={'travels/prevReserve'}>
+                            <p className='pb-2 text-[#8B8B8B]'>رزروهای قبلی</p>
                         </Link>
                     </div>
 
-                    <div className='flex w-[75%] border-b border-[#D3D3D3] mx-4 mt-[77px]'>
-                        <p className='pb-4 font-kalameh400 text-[18.97px] text-[#000]'>
-                            جزئیات آخرین رزرو شما
-                        </p>
-                    </div>
-
-                    <div className='w-full md:w-[75%]'>
+                    <div className='flex flex-col'>
                         {renderContent()}
                     </div>
-
                 </div>
-
             </div>
         </div>
     )
