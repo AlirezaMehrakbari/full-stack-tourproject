@@ -181,7 +181,6 @@ function calculateNights(from, to) {
     return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 }
 
-// villaController.js
 
 export const getLastUserReservation = async (req, res) => {
     try {
@@ -199,9 +198,7 @@ export const getLastUserReservation = async (req, res) => {
             return res.status(401).json({ message: "Unauthorized - user not found" });
         }
 
-        console.log('✅ User found:', user.email);
 
-        // پیدا کردن ویلاهایی که این کاربر رزرو دارد
         const villas = await Villa.find({
             'bookedDates.user': userId
         });
@@ -218,7 +215,6 @@ export const getLastUserReservation = async (req, res) => {
         let lastReservation = null;
         let lastVilla = null;
 
-        // پیدا کردن آخرین رزرو
         for (const villa of villas) {
             const userBookings = villa.bookedDates.filter(
                 booking => booking.user === userId
@@ -240,14 +236,12 @@ export const getLastUserReservation = async (req, res) => {
             });
         }
 
-        // محاسبه تعداد شب‌ها
         const fromDate = new Date(lastReservation.from);
         const toDate = new Date(lastReservation.to);
         const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
 
         console.log('✅ Last reservation found');
 
-        // ساختار دقیق برای کامپوننت Reserve
         res.json({
             title: lastVilla.title,
             province: lastVilla.province,
@@ -306,12 +300,10 @@ export const getUserReservations = async (req, res) => {
             );
 
             userBookings.forEach(booking => {
-                // محاسبه تعداد شب‌ها
                 const fromDate = new Date(booking.from);
                 const toDate = new Date(booking.to);
                 const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
 
-                // ساختار دقیق برای کامپوننت Reserve
                 allReservations.push({
                     _id: booking._id,
                     title: villa.title,
@@ -328,7 +320,6 @@ export const getUserReservations = async (req, res) => {
             });
         });
 
-        // مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
         allReservations.sort((a, b) =>
             new Date(b.from) - new Date(a.from)
         );
