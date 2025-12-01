@@ -339,3 +339,42 @@ export const getUserReservations = async (req, res) => {
     }
 };
 
+export const addToFavorites = async (req, res) => {
+    try {
+        const villaId = Number(req.params.id);
+
+        const villa = await Villa.findOne({ id: villaId });
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
+
+        const user = await User.findById(req.user.id);
+
+        if (!user.favorites.includes(villaId)) {
+            user.favorites.push(villaId);
+            await user.save();
+        }
+
+        res.json({ message: "Added to favorites", favorites: user.favorites });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+export const getFavorites = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const villas = await Villa.find({ id: { $in: user.favorites } });
+
+        res.json(villas);
+    } catch (err) {
+        console.error("getFavorites ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+

@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
 
     verificationCode: String,
     verificationCodeExpires: Date,
+
+    favorites: {
+        type: [Number],
+        default: []
+    }
 });
 
 export default mongoose.model("User", userSchema);
