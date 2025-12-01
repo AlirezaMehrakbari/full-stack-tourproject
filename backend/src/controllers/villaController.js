@@ -181,80 +181,88 @@ function calculateNights(from, to) {
     return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 }
 
+// villaController.js
+
 export const getLastUserReservation = async (req, res) => {
     try {
         console.log('\n=== GET LAST RESERVATION ===');
-        console.log('req.user:', req.user);
         console.log('User ID:', req.user?.id);
 
         if (!req.user || !req.user.id) {
-            console.log('❌ No user in request');
             return res.status(401).json({ message: "Unauthorized - no user" });
         }
 
-        console.log('Searching for user:', req.user.id);
-        const user = await User.findById(req.user.id);
+        const userId = req.user.id;
 
+        const user = await User.findById(userId);
         if (!user) {
-            console.log('❌ User not found in database');
             return res.status(401).json({ message: "Unauthorized - user not found" });
         }
 
         console.log('✅ User found:', user.email);
-        console.log('Searching for villas with this user\'s reservations...');
 
+        // پیدا کردن ویلاهایی که این کاربر رزرو دارد
         const villas = await Villa.find({
-            'books.user': req.user.id
-        }).sort({ 'books.from': -1 });
+            'bookedDates.user': userId
+        });
 
         console.log('Villas found:', villas.length);
 
         if (!villas || villas.length === 0) {
-            console.log('No villas with reservations found');
-            return res.json({ message: "No reservations found", reservation: null });
+            return res.json({
+                message: "No reservations found",
+                reservation: null
+            });
         }
 
         let lastReservation = null;
         let lastVilla = null;
 
+        // پیدا کردن آخرین رزرو
         for (const villa of villas) {
-            const userBooks = villa.books.filter(
-                book => book.user.toString() === req.user.id
+            const userBookings = villa.bookedDates.filter(
+                booking => booking.user === userId
             );
 
-            console.log(`Villa ${villa.title}: ${userBooks.length} reservations`);
-
-            for (const book of userBooks) {
-                if (!lastReservation || new Date(book.from) > new Date(lastReservation.from)) {
-                    lastReservation = book;
+            for (const booking of userBookings) {
+                const bookingDate = new Date(booking.from);
+                if (!lastReservation || bookingDate > new Date(lastReservation.from)) {
+                    lastReservation = booking;
                     lastVilla = villa;
                 }
             }
         }
 
         if (!lastReservation) {
-            console.log('No reservation found for this user');
-            return res.json({ message: "No reservations found", reservation: null });
+            return res.json({
+                message: "No reservations found",
+                reservation: null
+            });
         }
+
+        // محاسبه تعداد شب‌ها
+        const fromDate = new Date(lastReservation.from);
+        const toDate = new Date(lastReservation.to);
+        const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
 
         console.log('✅ Last reservation found');
 
+        // ساختار دقیق برای کامپوننت Reserve
         res.json({
-            villa: {
-                id: lastVilla._id,
-                title: lastVilla.title,
-                images: lastVilla.images
-            },
-            reservation: {
-                from: lastReservation.from,
-                to: lastReservation.to,
-                totalPrice: lastReservation.totalPrice,
-                status: lastReservation.status
-            }
+            title: lastVilla.title,
+            province: lastVilla.province,
+            city: lastVilla.city,
+            from: lastReservation.from,
+            to: lastReservation.to,
+            pricePerNight: lastVilla.pricePerNight,
+            capacity: lastVilla.capacity,
+            nights: nights,
+            totalPrice: lastVilla.pricePerNight * nights,
+            imageUrl: lastVilla.images[0] || '/default-villa.jpg'
         });
 
     } catch (error) {
-        console.error('❌ Error in getLastUserReservation:', error);
+        console.error('❌ Error:', error);
         res.status(500).json({
             message: "Server error",
             error: error.message
@@ -262,52 +270,81 @@ export const getLastUserReservation = async (req, res) => {
     }
 };
 
-
-
 export const getUserReservations = async (req, res) => {
     try {
         console.log('=== getUserReservations START ===');
-        console.log('req.user:', req.user);
-        console.log('req.userId:', req.userId);
 
-        const userId = req.user?.id || req.userId;
-
-        if (!userId) {
-            console.log('ERROR: No userId found');
+        if (!req.user || !req.user.id) {
             return res.status(401).json({
                 message: "Unauthorized - user not found"
             });
         }
 
-        console.log('Searching for user:', userId);
-        const userExists = await User.findById(userId);
-        console.log('User exists:', !!userExists);
+        const userId = req.user.id;
+        console.log('User ID:', userId);
 
+        const userExists = await User.findById(userId);
         if (!userExists) {
             return res.status(404).json({
                 message: "User not found in database"
             });
         }
 
-        console.log('Fetching reservations for user:', userId);
-        const reservations = await Book.find({ user: userId })
-            .populate('villa')
-            .sort({ createdAt: -1 });
+        console.log('✅ User found:', userExists.email);
 
-        console.log('Reservations count:', reservations.length);
+        const villas = await Villa.find({
+            'bookedDates.user': userId
+        });
+
+        console.log('Villas with reservations:', villas.length);
+
+        const allReservations = [];
+
+        villas.forEach(villa => {
+            const userBookings = villa.bookedDates.filter(
+                booking => booking.user === userId
+            );
+
+            userBookings.forEach(booking => {
+                // محاسبه تعداد شب‌ها
+                const fromDate = new Date(booking.from);
+                const toDate = new Date(booking.to);
+                const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
+
+                // ساختار دقیق برای کامپوننت Reserve
+                allReservations.push({
+                    _id: booking._id,
+                    title: villa.title,
+                    province: villa.province,
+                    city: villa.city,
+                    from: booking.from,
+                    to: booking.to,
+                    pricePerNight: villa.pricePerNight,
+                    capacity: villa.capacity,
+                    nights: nights,
+                    totalPrice: villa.pricePerNight * nights,
+                    imageUrl: villa.images[0] || '/default-villa.jpg'
+                });
+            });
+        });
+
+        // مرتب‌سازی بر اساس تاریخ (جدیدترین اول)
+        allReservations.sort((a, b) =>
+            new Date(b.from) - new Date(a.from)
+        );
+
+        console.log('Total reservations:', allReservations.length);
         console.log('=== getUserReservations END ===');
 
-        res.status(200).json(reservations);
+        res.status(200).json(allReservations);
 
     } catch (error) {
-        console.error('=== ERROR in getUserReservations ===');
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-
+        console.error('=== ERROR ===');
+        console.error(error);
         res.status(500).json({
             message: "Server error",
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: error.message
         });
     }
 };
+
