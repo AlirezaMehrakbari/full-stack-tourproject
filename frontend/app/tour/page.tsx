@@ -29,7 +29,7 @@ const TourHomePage = () => {
     const [passengers, setPassengers] = useState(0)
     const [values, setValues] = useState([])
     const [filterValue, setFilterValue] = useState('فیلتر')
-    const [sortBy, setSortBy] = useState('')
+    const [sortBy, setSortBy] = useState<'newest' | 'cheapest' | 'expensive' | 'nearestDate' | 'rating' | undefined>(undefined)
 
     const {data: toursData, isLoading, isError} = useQuery({
         queryKey: ['tours', origin, destination, values, passengers, sortBy],
@@ -38,6 +38,7 @@ const TourHomePage = () => {
             destination: destination !== 'مقصد' ? destination : undefined,
             startDate: values[0] ? moment.from(new DateObject(values[0]).format(), 'fa', 'YYYY/MM/DD').format('YYYY-MM-DD') : undefined,
             endDate: values[1] ? moment.from(new DateObject(values[1]).format(), 'fa', 'YYYY/MM/DD').format('YYYY-MM-DD') : undefined,
+            //@ts-ignore
             passengers: passengers > 0 ? passengers : undefined,
             sortBy,
         }),
