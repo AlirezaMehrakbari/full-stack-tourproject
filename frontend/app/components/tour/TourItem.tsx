@@ -1,34 +1,54 @@
 import Link from "next/link";
-import useStep from "@/app/hooks/useStep";
+import moment from 'jalali-moment';
+import FormatCurrency from "@/app/utils/FormatCurrency";
 
 export type TourItemProps = {
     id: number
     origin: string,
     destination: string,
-    price: string
+    price: number,
+    duration: number,
+    startDate: string,
+    endDate: string,
+    transportation: string,
+    tourGuide: string
 }
 const TourItem: React.FC<TourItemProps> = ({
                                                id,
                                                origin,
                                                destination,
-                                               price
+                                               price,
+                                               duration,
+                                               startDate,
+                                               endDate,
+                                               transportation,
+                                               tourGuide
                                            }) => {
+    const shamsiStartDate = moment(startDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
+    const shamsiEndDate = moment(endDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
     return (
         <Link href={`/tour/${id}`}>
             <div
                 className='w-full flex flex-col lg:flex-row justify-between bg-[#fafafa] rounded-lg mx-auto px-8 py-4 hover:shadow-xl cursor-pointer transition'>
-                <div className='pb-4'>
+                <div className='flex flex-col gap-y-2 pb-4'>
                     <h1 className='font-kalameh500 text-[20.6px] text-[#000] pb-2'>تور
                         {origin}-{destination}
                     </h1>
-                    <div className='grid sm:grid-cols-2'>
-                        <div>
-                            <p>2 شب اقامت</p>
-                            <p>17 آبان - 20 آبان</p>
+                    <div className='grid sm:grid-cols-2 gap-4'>
+                        <div className={'flex flex-col gap-y-1'}>
+                            <p>{duration} شب اقامت</p>
+                            <div>
+                                <span>{shamsiStartDate} - </span>
+                                <span>{shamsiEndDate}</span>
+                            </div>
                         </div>
-                        <div>
-                            <p>رفت : هواپیما - برگشت : هواپیما</p>
-                            <p>تور مسافرتی ندا سفر</p>
+                        <div className={'flex flex-col gap-y-1'}>
+                            <p>رفت و برگشت : {transportation}</p>
+                            <p>تور مسافرتی {tourGuide}</p>
                         </div>
                     </div>
                 </div>
@@ -38,7 +58,7 @@ const TourItem: React.FC<TourItemProps> = ({
                 <div className='grid justify-items-center text-center pt-4'>
                     <div className='text-cblue text-[20.2px] font-kalameh700 w-full'>
                         قیمت :
-                        <span>{price} تومان</span>
+                        <span>{FormatCurrency(price)} تومان</span>
                     </div>
                     <div
                         className='flex items-center bg-[#C8B616] text-white text-[17.8px] font-kalameh500 rounded-br-lg rounded-bl-lg px-2'>

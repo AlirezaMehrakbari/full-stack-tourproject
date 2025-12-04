@@ -1,6 +1,5 @@
 'use client';
 import {useQuery} from '@tanstack/react-query';
-import {tripTourApi} from '@/axios-instances';
 import Loading from '@/app/components/Loading';
 import useStep from '@/app/hooks/useStep';
 import VillaDetail from '@/app/components/villa/VillaDetail';
@@ -29,7 +28,6 @@ const VillaDetailPage = ({params}: VillaDetailPageProps) => {
             return mapVillaDataToFront(villa);
         },
     });
-    console.log(data)
 
 
     if (isLoading) return <Loading/>;

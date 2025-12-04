@@ -1,8 +1,9 @@
 import React from 'react'
 import TourItem, {TourItemProps} from "@/app/components/tour/TourItem";
+import {Tour} from "@/app/tour/_types/tourTypes";
 
 type TourListProps = {
-    data: TourItemProps[]
+    data: Tour[]
 }
 const TourList: React.FC<TourListProps> = ({data}) => {
     return (
@@ -15,6 +16,11 @@ const TourList: React.FC<TourListProps> = ({data}) => {
                         origin={item.origin}
                         destination={item.destination}
                         price={item.price}
+                        tourGuide={item.tourGuide.name}
+                        duration={item.duration}
+                        endDate={item.endDate}
+                        startDate={item.startDate}
+                        transportation={item.transportation}
                     />
                 )
             })}
