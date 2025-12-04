@@ -339,23 +339,44 @@ export const getUserReservations = async (req, res) => {
     }
 };
 
-export const addToFavorites = async (req, res) => {
+export const toggleFavorite = async (req, res) => {
     try {
         const villaId = Number(req.params.id);
 
         const villa = await Villa.findOne({ id: villaId });
-        if (!villa) return res.status(404).json({ message: "Villa not found" });
-
-        const user = await User.findById(req.user.id);
-
-        if (!user.favorites.includes(villaId)) {
-            user.favorites.push(villaId);
-            await user.save();
+        if (!villa) {
+            return res.status(404).json({ message: "Villa not found" });
         }
 
-        res.json({ message: "Added to favorites", favorites: user.favorites });
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const index = user.favorites.indexOf(villaId);
+
+        if (index > -1) {
+            user.favorites.splice(index, 1);
+            await user.save();
+
+            return res.json({
+                message: "Removed from favorites",
+                favorites: user.favorites,
+                action: "removed"
+            });
+        } else {
+            user.favorites.push(villaId);
+            await user.save();
+
+            return res.json({
+                message: "Added to favorites",
+                favorites: user.favorites,
+                action: "added"
+            });
+        }
+
     } catch (err) {
-        console.error(err);
+        console.error("toggleFavorite ERROR:", err);
         res.status(500).json({ message: "Server error" });
     }
 };

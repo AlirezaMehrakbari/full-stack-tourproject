@@ -9,7 +9,7 @@ import {
     createVilla,
     getUserReservations,
     getLastUserReservation,
-    addToFavorites,
+    toggleFavorite,
     getFavorites
 } from "../controllers/villaController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -27,6 +27,6 @@ router.get("/:id", getVillaById);
 router.post("/:id/book", bookVilla);
 router.post("/:id/reviews", addReview);
 router.put("/:villaId/reviews/:reviewId/reply", replyToReview);
-router.post("/:id/favorite", protect, addToFavorites);
+router.post("/:id/favorite", protect, toggleFavorite);
 
 export default router;
