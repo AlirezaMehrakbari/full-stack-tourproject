@@ -3,6 +3,7 @@ import cors from "cors";
 import hotelRoutes from "./routes/hotelRoutes.js";
 import villaRoutes from "./routes/villaRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import tourRoutes from "./routes/tourRoutes.js";
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/villas", villaRoutes);
+app.use("/api/tours", tourRoutes);
 app.use("/api/auth", authRoutes);
 
 
