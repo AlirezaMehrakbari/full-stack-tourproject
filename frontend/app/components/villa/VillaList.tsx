@@ -27,9 +27,9 @@ const VillaList: React.FC<VillaListProps> = ({ data }) => {
     const handleFavorite = (villaId: number) => {
         toggleFavorite.mutate(villaId, {
             onSuccess: (res) => {
-                if (res.message === "insert to favorites") {
+                if (res.message === "Added to favorites") {
                     toast.success("به علاقه‌مندی‌ها اضافه شد.");
-                } else if (res.message === "delete from favorites") {
+                } else if (res.message === "Removed from favorites") {
                     toast.warn("از علاقه‌مندی‌ها حذف شد.");
                 }
             },
@@ -55,7 +55,7 @@ const VillaList: React.FC<VillaListProps> = ({ data }) => {
                     price={villa.pricePerNight?.toString()}
                     Satisfaction={villa.avgRating}
                     opinion={villa.numReviews}
-                    favoriteList={favoriteIds}
+                    favoriteIds={favoriteIds}
                     onClickFavorite={() => handleFavorite(villa.id)}
                 />
             ))}

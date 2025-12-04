@@ -16,11 +16,9 @@ export type VillaItemProps = {
     city: string,
     price: string,
     onClickFavorite: () => void,
-    favoriteList: FavoriteListProp[]
+    favoriteIds: number[]
 }
-type FavoriteListProp = {
-    id: number
-}
+
 const VillaItem: React.FC<VillaItemProps> = ({
                                                  image,
                                                  title,
@@ -31,7 +29,7 @@ const VillaItem: React.FC<VillaItemProps> = ({
                                                  price,
                                                  id,
                                                  onClickFavorite,
-                                                 favoriteList,
+                                                 favoriteIds,
                                              }) => {
     const userSession = useAppSelector(state => state.userSlice)
 
@@ -41,7 +39,7 @@ const VillaItem: React.FC<VillaItemProps> = ({
             <div className='relative'>
                 <Link href={`/villa/${id}`}>
                     <div
-                    className={'relative w-full h-[250px]'}
+                        className={'relative w-full h-[250px]'}
                     >
                         <Image
                             className='rounded-[12px] object-cover object-center shadow-md hover:shadow-lg cursor-pointer h-[250px]'
@@ -53,7 +51,7 @@ const VillaItem: React.FC<VillaItemProps> = ({
                 </Link>
 
                 {userSession.value.isLoggedIn ?
-                    favoriteList.find(item => item.id === id) ? (
+                    favoriteIds.find(fId => fId === id) ? (
                         <svg className='absolute left-[15px] top-[18px]' onClick={onClickFavorite}
                              xmlns="http://www.w3.org/2000/svg" width="20" height="21" viewBox="0 0 23 21" fill="none">
                             <path
