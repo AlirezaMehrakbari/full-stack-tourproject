@@ -8,7 +8,7 @@ const sidebar = () => {
     const pathName = usePathname()
 
     return (
-        <div className="w-full h-fit rounded-md shadow-[0px_0px_20px_0px_#808080a3] bg-[#F0F0F0] mx-auto">
+        <div className="w-full h-fit rounded-md shadow-lg bg-[#F0F0F0] mx-auto">
             <div className='w-[80%] flex flex-col mx-auto divide-y divide-[#D3D3D3] gap-y-4 py-[30px]'>
                 <div className='flex justify-center items-center'>
                     <Link
