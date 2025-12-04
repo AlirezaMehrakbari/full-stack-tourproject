@@ -45,14 +45,18 @@ const TourHomePage = () => {
     });
 
     const jazebeTouristi = [
-        {id: 1, src: TourGillan, title: 'گیلان'},
-        {id: 2, src: TourGillan, title: 'تخت جمشید'},
-        {id: 3, src: TourGillan, title: 'یزد'},
-        {id: 4, src: TourGillan, title: 'شیراز'},
-        {id: 5, src: TourGillan, title: 'اصفهان'},
-        {id: 6, src: TourGillan, title: 'کاشان'},
-        {id: 7, src: TourGillan, title: 'مشهد'},
-        {id: 8, src: TourGillan, title: 'تبریز'},
+        {
+            id: 1,
+            src: "https://navardino.ir/mag/wp-content/uploads/2024/04/%D9%82%D9%84%D8%B9%D9%87-%D8%B1%D9%88%D8%AF%D8%AE%D8%A7%D9%86.jpg",
+            title: 'گیلان'
+        },
+        {id: 2, src: "https://www.safarbazi.com/mag/wp-content/uploads/2023/11/%D8%AA%D8%AE%D8%AA-%D8%AC%D9%85%D8%B4%DB%8C%D8%AF-%D8%B4%DB%8C%D8%B1%D8%A7%D8%B2.jpg", title: 'تخت جمشید'},
+        {id: 3, src: "https://www.otaghak.com/blog/wp-content/uploads/2021/11/about-yazd19-1.webp", title: 'یزد'},
+        {id: 4, src: "https://amagestate.com/wp-content/uploads/%D8%AD%D8%A7%D9%81%D8%B8%DB%8C%D9%87-%D9%86%D9%85%D8%A7%D8%AF%DB%8C-%D8%A7%D8%B2-%D8%B4%DB%8C%D8%B1%D8%A7%D8%B2.webp", title: 'شیراز'},
+        {id: 5, src: "https://cdn.donya-e-eqtesad.com/thumbnail/857J4yDU9BXY/QHn8O9nsSzT8qCU7RegsN6Pbb5v74eEtbKeSOh05RaYX5XCoSVKqAUt7TZyzEhnm/%D9%85%D8%AD%D9%88%D8%B1%DB%8C+%D8%A8%D8%A7%D9%84%D8%A7+copy.jpg", title: 'اصفهان'},
+        {id: 6, src: "https://api2.kojaro.com/media/2017-8-a25ea7db-da97-43ba-8e3e-533a5c4267d6-67c460ddc1067c5ba76162d7", title: 'کاشان'},
+        {id: 7, src: "https://lahzeakhar.com/files/bloggallery/26d33175-e4a3-44be-a0b2-e8ac60e6fe78.jpg", title: 'مشهد'},
+        {id: 8, src: "https://safarmarket.com/blog/data/uploaded_files/f53ec7e167cd5a89462a74c2.jpg", title: 'تبریز'},
     ]
 
     const questions = [
@@ -268,18 +272,23 @@ const TourHomePage = () => {
                 <div className='grid md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4'>
                     {jazebeTouristi.map(item => (
                         <div key={item.id} className='relative cursor-pointer group'>
-                            <Image
-                                className='rounded-md max-h-[230px] object-cover'
-                                src={item.src}
-                                alt={item.title}
-                            />
+                            <div
+                                className={'w-full h-[150px]'}
+                            >
+                                <Image
+                                    className='w-full h-full rounded-md object-cover'
+                                    src={item.src}
+                                    alt={item.title}
+                                    fill
+                                />
+                            </div>
                             <div
                                 className='absolute bg-gradient-to-t from-[#524F4F] to-[#02020200] to-30% inset-0 rounded-md'></div>
                             <div
                                 className='hidden absolute group-hover:flex flex-col justify-center items-center text-white inset-0 bg-[#0000004D]'>
                                 <h1 className='text-[28.3px] font-kalameh500'>{item.title}</h1>
-                                <p className='bg-[#D2BA00] text-[20px] font-kalameh500 px-4 rounded-[8px]'>جزئیات
-                                    خرید</p>
+                                {/*<p className='bg-[#D2BA00] text-[20px] font-kalameh500 px-4 rounded-[8px]'>جزئیات*/}
+                                {/*    خرید</p>*/}
                             </div>
                         </div>
                     ))}
