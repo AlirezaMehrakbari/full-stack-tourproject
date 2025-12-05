@@ -171,7 +171,7 @@ export const deleteTour = async (req, res) => {
 
 export const bookTour = async (req, res) => {
     try {
-        const { passengers } = req.body;
+        const { passengers, passengersInfo, travelDate } = req.body;
 
         const tour = await Tour.findOne({ id: req.params.id });
 
@@ -179,10 +179,37 @@ export const bookTour = async (req, res) => {
             return res.status(404).json({ message: "تور یافت نشد" });
         }
 
+        if (tour.status === 'inactive') {
+            return res.status(400).json({ message: "این تور غیرفعال است" });
+        }
+
         if (tour.availableSeats < passengers) {
             return res.status(400).json({
-                message: "ظرفیت کافی نیست"
+                message: `فقط ${tour.availableSeats} صندلی خالی است`
             });
+        }
+
+        if (!passengers || passengers < 1) {
+            return res.status(400).json({
+                message: "تعداد مسافران نامعتبر است"
+            });
+        }
+
+        if (passengersInfo && passengersInfo.length !== passengers) {
+            return res.status(400).json({
+                message: "تعداد مسافران با اطلاعات ارسالی مطابقت ندارد"
+            });
+        }
+
+        if (passengersInfo) {
+            for (let i = 0; i < passengersInfo.length; i++) {
+                const passenger = passengersInfo[i];
+                if (!passenger.firstName || !passenger.lastName || !passenger.nationalId) {
+                    return res.status(400).json({
+                        message: `اطلاعات مسافر ${i + 1} ناقص است`
+                    });
+                }
+            }
         }
 
         const totalPrice = tour.price * passengers;
@@ -191,21 +218,40 @@ export const bookTour = async (req, res) => {
             user: req.user.id,
             username: req.user.username,
             passengers,
-            totalPrice
+            passengersInfo: passengersInfo || [],
+            totalPrice,
+            travelDate: travelDate || null,
+            bookingStatus: 'confirmed'
         };
 
         tour.bookings.push(booking);
+
         tour.availableSeats -= passengers;
+
+        if (tour.availableSeats === 0) {
+            tour.status = 'full';
+        }
 
         await tour.save();
 
         res.status(200).json({
             message: "رزرو با موفقیت انجام شد",
-            booking
+            booking: {
+                id: tour.bookings[tour.bookings.length - 1]._id,
+                tourTitle: tour.title,
+                passengers,
+                totalPrice,
+                travelDate,
+                createdAt: booking.createdAt
+            }
         });
+
     } catch (error) {
         console.error("Error in bookTour:", error);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({
+            message: "خطا در سرور",
+            error: error.message
+        });
     }
 };
 

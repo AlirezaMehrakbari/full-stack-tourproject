@@ -1,5 +1,67 @@
 import mongoose from "mongoose";
 
+const bookingSchema = new mongoose.Schema({
+    user: {
+        type: String,
+        required: true
+    },
+    username: {
+        type: String
+    },
+    passengers: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    passengersInfo: [{
+        id: { type: Number },
+        firstName: {
+            type: String,
+            required: true
+        },
+        lastName: {
+            type: String,
+            required: true
+        },
+        nationalId: {
+            type: String,
+            required: true
+        },
+        nationality: {
+            type: String
+        },
+        gender: {
+            type: String,
+            enum: ['زن', 'مرد']
+        },
+        birthDate: {
+            type: String
+        },
+        passportNumber: {
+            type: String
+        },
+        passportExpiry: {
+            type: String
+        }
+    }],
+    travelDate: {
+        type: String
+    },
+    totalPrice: {
+        type: Number,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'cancelled'],
+        default: 'confirmed'
+    },
+    bookingDate: {
+        type: Date,
+        default: Date.now
+    }
+});
+
 const tourSchema = new mongoose.Schema(
     {
         id: { type: Number, unique: true, required: true },
@@ -67,18 +129,7 @@ const tourSchema = new mongoose.Schema(
             createdAt: { type: Date, default: Date.now }
         }],
 
-        bookings: [{
-            user: { type: String, required: true },
-            username: { type: String },
-            passengers: { type: Number, required: true },
-            totalPrice: { type: Number, required: true },
-            status: {
-                type: String,
-                enum: ['pending', 'confirmed', 'cancelled'],
-                default: 'pending'
-            },
-            bookingDate: { type: Date, default: Date.now }
-        }],
+        bookings: [bookingSchema],
 
         status: {
             type: String,
