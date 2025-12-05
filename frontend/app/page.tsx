@@ -82,23 +82,23 @@ export default function Home() {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
-        },  {
+        }, {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
-        },  {
+        }, {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
-        },  {
+        }, {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
-        },  {
+        }, {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
-        },  {
+        }, {
             id: 5,
             title: 'اجاره اقامتگاه در مازندران',
             src: SwiperPicture
@@ -144,7 +144,8 @@ export default function Home() {
         <div className='mx-auto'>
             <div>
                 <LandingNavbar/>
-                <div className='mt-[-40px] z-10  absolute inset-x-0 sm:w-[500px] md:w-[750px] lg:w-[936px] max-h-[126px] mx-auto'>
+                <div
+                    className=' lg:mt-[-220px] mt-[-40px] z-10  absolute inset-x-0 sm:w-[500px] md:w-[750px] lg:w-[936px] max-h-[126px] mx-auto'>
                     <Layout>
                         {category.map(item => {
                             return (
@@ -166,7 +167,7 @@ export default function Home() {
 
                 <div className='px-[72px]'>
                     {/*قسمت دسته بندی (عکس های طبیعت)*/}
-                    <div className='flex py-[150px] mx-auto justify-center items-center gap-x-[47px]'>
+                    <div className='flex max-lg:pt-[120px] pb-20 mx-auto justify-center items-center gap-x-[47px]'>
                         <div className='overflow-hidden rounded-[20px] relative group max-xl:hidden'>
                             <Image
                                 src={NaturePicture}
@@ -181,7 +182,8 @@ export default function Home() {
                                 className='absolute bg-gradient-to-t from-[#524F4F] to-[#02020200] to-20% inset-0 group cursor-pointer'></div>
                         </div>
                         <div className='flex flex-col gap-y-[40px]'>
-                            <div className='overflow-hidden rounded-[20px] relative group w-[300px] mx-auto sm:w-[510px] sm:h-[235px]'>
+                            <div
+                                className='overflow-hidden rounded-[20px] relative group w-[300px] mx-auto sm:w-[510px] sm:h-[235px]'>
                                 <Image
                                     src={MountainPicture}
                                     alt={'Mountain Picture'}
@@ -194,7 +196,8 @@ export default function Home() {
                                 <div
                                     className='absolute bg-gradient-to-t from-[#524F4F] to-[#02020200] to-20% inset-0 group cursor-pointer'></div>
                             </div>
-                            <div className='overflow-hidden rounded-[20px] relative group w-[300px] mx-auto sm:w-[510px] sm:h-[235px]'>
+                            <div
+                                className='overflow-hidden rounded-[20px] relative group w-[300px] mx-auto sm:w-[510px] sm:h-[235px]'>
                                 <Image
                                     src={YazdPicture}
                                     alt={'Yazd Picture'}
@@ -262,7 +265,8 @@ export default function Home() {
                             </div>
                         </div>
 
-                        <div className='flex flex-col lg:flex-row gap-4 self-end max-lg:items-center justify-between max-xl:w-full'>
+                        <div
+                            className='flex flex-col lg:flex-row gap-4 self-end max-lg:items-center justify-between max-xl:w-full'>
                             <div className='relative md:max-w-[510px] md:h-[475px]'>
                                 <Image src={TakhfifPicture} alt='Villa Picture'
                                        className='rounded-[20px] object-cover h-full'/>

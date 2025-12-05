@@ -8,6 +8,7 @@ import PaymentDetail from '@/app/components/process/PaymentDetail';
 import Receipt from '@/app/components/process/Receipt';
 import {mapVillaDataToFront} from '@/app/villa/_utils/mapVillaDataToFront';
 import {getVillaDetail} from "@/app/villa/_api/getVillaDetail";
+import {useEffect} from "react";
 
 type VillaDetailPageProps = {
     params: {
@@ -28,6 +29,9 @@ const VillaDetailPage = ({params}: VillaDetailPageProps) => {
             return mapVillaDataToFront(villa);
         },
     });
+    useEffect(() => {
+        step.resetStep()
+    }, [])
 
 
     if (isLoading) return <Loading/>;

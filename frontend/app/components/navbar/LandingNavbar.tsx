@@ -20,7 +20,7 @@ const LandingNavbar = () => {
             <Image
                 src={MainPic}
                 alt='Tour Picture'
-                className='w-full max-h-[793px] bg-contain'
+                className='w-full max-h-[793px] bg-contain lg:relative top-[-140px]'
             />
             <div
                 className='absolute top-[15px] sm:top-[40px] flex justify-between items-center w-full px-4 sm:px-[40px]'>

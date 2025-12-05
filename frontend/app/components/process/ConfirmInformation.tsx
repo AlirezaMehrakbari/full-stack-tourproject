@@ -6,12 +6,15 @@ import Stepper from "@/app/components/Stepper";
 import {useAppSelector} from "@/app/redux/store";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
 import {toast, ToastContainer} from "react-toastify";
+import {Tour} from "@/app/tour/_types/tourTypes";
+import moment from "jalali-moment";
 
 type ConfirmInformationProps = {
     isVilla?: boolean,
-    villaDetails?: VillaDetails
+    villaDetails?: VillaDetails,
+    tourDetails?: Tour
 }
-const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDetails}) => {
+const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDetails, tourDetails}) => {
     const villaReserveDetail = useAppSelector(state => state.villaReserve)
     const step = useStep()
     const userSession = useAppSelector(state => state.userSlice)
@@ -26,6 +29,14 @@ const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDe
 
         step.nextStep()
     }
+
+    const shamsiStartDate = !isVilla ? moment(tourDetails?.startDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM') : undefined
+    const shamsiEndDate = !isVilla ? moment(tourDetails?.endDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM') : undefined
+
     return (
         <div>
             <Stepper isVilla={isVilla}/>
@@ -75,29 +86,29 @@ const ConfirmInformation: React.FC<ConfirmInformationProps> = ({isVilla, villaDe
                             <>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>مبدا</td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>تهران</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{tourDetails?.origin}</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>مقصد</td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>استانبول</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{tourDetails?.destination}</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>تور
                                         مسافرتی
                                     </td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>تور سفیـران</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{tourDetails?.tourGuide.name}</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>تاریخ
                                         سفر
                                     </td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>17 - 20 آبان</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>{shamsiStartDate} - {shamsiEndDate}</td>
                                 </tr>
                                 <tr className='border-b-[1px] border-[#D2D2D2]'>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>شماره
                                         پرواز
                                     </td>
-                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>AR 5046</td>
+                                    <td className='text-[20px] font-kalameh500 pr-20 pb-6 pt-6'>AR {Math.round(Math.random() * 1000)}</td>
                                 </tr>
                                 <tr>
                                     <td className='border-l-[1px] border-[#D2D2D2]  text-[20px] font-kalameh400 pb-6 pt-6'>کلاس

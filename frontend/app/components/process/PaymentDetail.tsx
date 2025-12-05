@@ -3,27 +3,32 @@ import PaymentDetailPicture from '@/public/images/PaymentDetailPicture.png'
 import Footer from "@/app/components/footer/footer";
 import useStep from "@/app/hooks/useStep";
 import Stepper from "@/app/components/Stepper";
-import React, {useEffect} from "react";
-import {useAppSelector} from "@/app/redux/store";
+import React from "react";
+import {useAppDispatch, useAppSelector} from "@/app/redux/store";
 import formatCurrency from "@/app/utils/FormatCurrency";
 import {tripTourApi} from "@/axios-instances";
 import DateObject from "react-date-object";
 import {formatDateToShamsi} from "@/app/utils/FormatDateToShamsi";
 import {useRouter} from "next/navigation";
 import {toast} from 'react-toastify'
-import RegisterModal from "@/app/components/modals/RegisterModal";
 import useRegisterModal from "@/app/hooks/useRegisterModal";
+import {Tour} from "@/app/tour/_types/tourTypes";
+import moment from "jalali-moment";
+import {clearBooking} from "@/app/tour/_slice/bookingSlice";
 
 type PaymentDetailProps = {
     isVilla?: boolean,
-    villaDetails?: VillaDetails
+    villaDetails?: VillaDetails,
+    tourDetails?: Tour
 }
-const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) => {
+
+const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails, tourDetails}) => {
     const step = useStep()
     const villaReserveDetail = useAppSelector(state => state.villaReserve)
+    const tourReserveDetail = useAppSelector(state => state.tourReserve)
     const userSession = useAppSelector(state => state.userSlice)
     const router = useRouter()
-
+    const dispatch = useAppDispatch()
 
     let checkIn = formatDateToShamsi(new DateObject(
         {
@@ -33,7 +38,6 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
             month: villaReserveDetail.entryDate?.month,
             //@ts-ignore
             day: villaReserveDetail.entryDate?.day,
-
         }).format())
     let checkOut = formatDateToShamsi(new DateObject(
         {
@@ -43,8 +47,26 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
             month: villaReserveDetail.exitDate?.month,
             //@ts-ignore
             day: villaReserveDetail.exitDate?.day,
-
         }).format())
+
+    const shamsiStartDate = !isVilla ? moment(tourDetails?.startDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM') : undefined
+    const shamsiEndDate = !isVilla ? moment(tourDetails?.endDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM') : undefined
+
+
+    const totalTourPassengers = tourReserveDetail.passengers.adult1 +
+        tourReserveDetail.passengers.adult2 +
+        tourReserveDetail.passengers.childFrom2to12 +
+        tourReserveDetail.passengers.child2;
+
+    const calculateTourPrice = () => {
+        if (!tourDetails?.price) return 0;
+        return tourDetails.price * totalTourPassengers;
+    };
+
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -54,47 +76,115 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
             return;
         }
 
-        try {
-            const res = await tripTourApi.post(
-                `villas/${villaDetails?.id}/book`,
-                {
-                    from: checkIn,
-                    to: checkOut,
-                    user: userSession.value.id
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${userSession.value.token}`
+        if (!isVilla) {
+            if (!tourReserveDetail.travelDate || tourReserveDetail.travelDate === 'تاریخ سفر را مشخص کنید') {
+                toast.error("لطفاً تاریخ سفر را انتخاب کنید");
+                return;
+            }
+
+            if (tourReserveDetail.passengersInfo.length !== totalTourPassengers) {
+                toast.error(`لطفاً اطلاعات تمام ${totalTourPassengers} مسافر را وارد کنید`);
+                return;
+            }
+
+            for (let i = 0; i < tourReserveDetail.passengersInfo.length; i++) {
+                const passenger = tourReserveDetail.passengersInfo[i];
+                if (!passenger.firstName?.trim() || !passenger.lastName?.trim() || !passenger.nationalId?.trim()) {
+                    toast.error(`لطفاً اطلاعات اصلی مسافر ${i + 1} را کامل کنید`);
+                    return;
+                }
+
+                if (tourDetails?.tourType === 'خارجی') {
+                    if (!passenger.passportNumber?.trim() || !passenger.passportExpiry?.trim()) {
+                        toast.error(`لطفاً اطلاعات پاسپورت مسافر ${i + 1} را وارد کنید`);
+                        return;
                     }
                 }
-            );
+            }
+        }
 
-            toast.success("رزرو شما با موفقیت ثبت شد");
+        try {
+            if (isVilla) {
+                const res = await tripTourApi.post(
+                    `villas/${villaDetails?.id}/book`,
+                    {
+                        from: checkIn,
+                        to: checkOut,
+                        user: userSession.value.id
+                    },
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${userSession.value.token}`
+                        }
+                    }
+                );
+                toast.success("رزرو ویلا شما با موفقیت ثبت شد");
+            } else {
+                const tourPrice = tourDetails?.price || 0;
+                const calculatedTotalPrice = tourPrice * totalTourPassengers;
 
-            router.push("/profile/reservations");
+                const bookingData = {
+                    passengers: totalTourPassengers,
+                    passengersInfo: tourReserveDetail.passengersInfo.map(p => ({
+                        id: p.id,
+                        firstName: p.firstName,
+                        lastName: p.lastName,
+                        nationalId: p.nationalId,
+                        nationality: p.nationality || "",
+                        gender: p.gender,
+                        birthDate: p.birthDate || "",
+                        passportNumber: p.passportNumber || "",
+                        passportExpiry: p.passportExpiry || ""
+                    })),
+                    travelDate: tourReserveDetail.travelDate,
+                    totalPrice: calculatedTotalPrice
+                };
+
+
+                const res = await tripTourApi.post(
+                    `tours/${tourDetails?.id}/book`,
+                    bookingData,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${userSession.value.token}`
+                        }
+                    }
+                );
+
+                toast.success("رزرو تور شما با موفقیت ثبت شد");
+            }
+
+            step.nextStep()
 
         } catch (error: any) {
+            console.error('❌ Booking error:', error.response?.data || error);
+
             if (error.response?.data?.message) {
                 toast.error(error.response.data.message);
+            } else if (error.response?.status === 400) {
+                toast.error("اطلاعات ارسالی نامعتبر است");
+            } else if (error.response?.status === 404) {
+                toast.error("تور مورد نظر یافت نشد");
             } else {
                 toast.error("خطا در رزرو. لطفا دوباره امتحان کنید.");
             }
-            console.log(error);
         }
     };
+
 
     return (
         <div>
             <Stepper isVilla={isVilla}/>
-            <form
-                className='flex flex-col lg:flex-row items-center gap-x-[6rem] w-[80%] mx-auto mt-4 md:mt-[10rem]'>
+            <form className='flex flex-col lg:flex-row items-center gap-x-[6rem] w-[80%] mx-auto mt-4 md:mt-[10rem]'>
                 <div className='w-full flex flex-col gap-y-6 lg:w-[50%] pb-8 border-[#BFBFBF]'>
-                    <h1 className='md:text-[28.2px] font-kalameh400 border-b-[1px] border-[#BFBFBF] py-4'>جزئـیات خـریـد
-                        شـما</h1>
+                    <h1 className='md:text-[28.2px] font-kalameh400 border-b-[1px] border-[#BFBFBF] py-4'>
+                        جزئـیات خـریـد شـما
+                    </h1>
+
                     <div className='flex items-center gap-3'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="25" viewBox="0 0 28 25"
-                             fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="25" viewBox="0 0 28 25" fill="none">
                             <path
                                 d="M24.1579 5.47363H3.31579C2.03681 5.47363 1 6.51045 1 7.78942V21.6842C1 22.9631 2.03681 23.9999 3.31579 23.9999H24.1579C25.4369 23.9999 26.4737 22.9631 26.4737 21.6842V7.78942C26.4737 6.51045 25.4369 5.47363 24.1579 5.47363Z"
                                 stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -109,13 +199,19 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                         </svg>
                         <div className='flex flex-col'>
                             <p className='text-[11.2px] text-[#777]'>تـاریـخ سفـر</p>
-                            {//@ts-ignore
-                                <p className='font-kalameh500'> {villaReserveDetail?.entryDate?.day} {villaReserveDetail?.entryDate?.month?.name}</p>}
+                            {isVilla ? (
+                                <p className='font-kalameh500'>
+                                    {/*//@ts-ignore*/}
+                                    {villaReserveDetail?.entryDate?.day} {villaReserveDetail?.entryDate?.month?.name}
+                                </p>
+                            ) : (
+                                <p className='font-kalameh500'>{shamsiStartDate} - {shamsiEndDate}</p>
+                            )}
                         </div>
                     </div>
+
                     <div className='flex items-center gap-3'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="26" viewBox="0 0 32 26"
-                             fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="26" viewBox="0 0 32 26" fill="none">
                             <path
                                 d="M22.3333 25V22.3333C22.3333 20.9188 21.7714 19.5623 20.7712 18.5621C19.771 17.5619 18.4145 17 17 17H6.33333C4.91884 17 3.56229 17.5619 2.5621 18.5621C1.5619 19.5623 1 20.9188 1 22.3333V25"
                                 stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -131,17 +227,19 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                         </svg>
                         <div className='flex flex-col'>
                             <p className='text-[11.2px] text-[#777]'>تعـداد مسافران</p>
-                            <p className='font-kalameh500'>{villaReserveDetail.passengers} نفــر</p>
+                            <p className='font-kalameh500'>
+                                {isVilla ? villaReserveDetail.passengers : totalTourPassengers} نفــر
+                            </p>
                         </div>
                     </div>
+
                     <div className='flex items-center gap-3'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27"
-                             fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" fill="none">
                             <path
                                 d="M13.5 26C20.4036 26 26 20.4036 26 13.5C26 6.59644 20.4036 1 13.5 1C6.59644 1 1 6.59644 1 13.5C1 20.4036 6.59644 26 13.5 26Z"
                                 stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M8.5 16C8.5 16 10.375 18.5 13.5 18.5C16.625 18.5 18.5 16 18.5 16"
-                                  stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8.5 16C8.5 16 10.375 18.5 13.5 18.5C16.625 18.5 18.5 16 18.5 16" stroke="black"
+                                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M9.75 9.75H9.762" stroke="black" strokeWidth="2" strokeLinecap="round"
                                   strokeLinejoin="round"/>
                             <path d="M17.25 9.75H17.262" stroke="black" strokeWidth="2" strokeLinecap="round"
@@ -152,9 +250,9 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                             <p className='font-kalameh500'>{userSession.value.fullName}</p>
                         </div>
                     </div>
+
                     <div className='flex items-center gap-3'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="29" height="29" viewBox="0 0 29 29"
-                             fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="29" height="29" viewBox="0 0 29 29" fill="none">
                             <path d="M14.5225 5V25.25" stroke="black" strokeLinecap="round" strokeLinejoin="round"/>
                             <path
                                 d="M19.125 8.68164H12.2216C11.3672 8.68164 10.5477 9.02106 9.94358 9.62522C9.33942 10.2294 9 11.0488 9 11.9032C9 12.7577 9.33942 13.5771 9.94358 14.1812C10.5477 14.7854 11.3672 15.1248 12.2216 15.1248H16.8239C17.6783 15.1248 18.4977 15.4642 19.1019 16.0684C19.706 16.6726 20.0455 17.492 20.0455 18.3464C20.0455 19.2008 19.706 20.0203 19.1019 20.6244C18.4977 21.2286 17.6783 21.568 16.8239 21.568H9"
@@ -167,9 +265,15 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                             <p className='text-[11.2px] text-[#777]'>
                                 {isVilla ? 'هزینه اقامت هرشب' : 'هزینه پرداختی'}
                             </p>
-                            <p className='font-kalameh500'>{villaDetails && formatCurrency(+villaDetails.pricePerNight)} تومـان</p>
+                            <p className='font-kalameh500'>
+                                {isVilla
+                                    ? villaDetails && formatCurrency(+villaDetails.pricePerNight)
+                                    : tourDetails && formatCurrency(calculateTourPrice())
+                                } تومـان
+                            </p>
                         </div>
                     </div>
+
                     <div className='flex items-center gap-3'>
                         {isVilla ? (
                             <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27"
@@ -210,37 +314,35 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                             ) : (
                                 <>
                                     <p className='text-[11.2px] text-[#777]'>حمل و نقـل</p>
-                                    <p className='font-kalameh500'>هواپــیــما</p>
+                                    <p className='font-kalameh500'>{tourDetails?.transportation || 'هواپــیــما'}</p>
                                 </>
                             )}
                         </div>
                     </div>
                 </div>
+
                 <div
                     className='w-full md:w-[90%] lg:w-[40%] bg-[#F9F9F9] px-[30px] lg:pr-[56px] py-[32px] rounded-[12px] shadow-md'>
                     <div className='flex max-md:items-center flex-col gap-x-6'>
-                        {
-                            isVilla ?
-                                <div
-                                    className={'relative w-full h-[200px]'}>
-                                    <Image
-                                        className='rounded-[15px]'
-                                        src={villaDetails?.medias[0] || PaymentDetailPicture}
-                                        alt={'PaymentDetail Picture'}
-                                        fill
-                                    />
-                                </div>
-                                :
-                                <div
-                                    className={'relative w-[50%] h-50'}>
-                                    <Image
-                                        className='rounded-[15px]'
-                                        src={PaymentDetailPicture}
-                                        alt={'PaymentDetail Picture'}
-                                        fill
-                                    />
-                                </div>
-                        }
+                        {isVilla ? (
+                            <div className={'relative w-full h-[200px]'}>
+                                <Image
+                                    className='rounded-[15px]'
+                                    src={villaDetails?.medias[0] || PaymentDetailPicture}
+                                    alt={'PaymentDetail Picture'}
+                                    fill
+                                />
+                            </div>
+                        ) : (
+                            <div className={'relative w-full h-[200px]'}>
+                                <Image
+                                    className='rounded-[15px]'
+                                    src={tourDetails?.images?.[0] || PaymentDetailPicture}
+                                    alt={'Tour Picture'}
+                                    fill
+                                />
+                            </div>
+                        )}
                         <div className='flex flex-col py-2'>
                             {isVilla ? (
                                 <>
@@ -249,19 +351,22 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                                 </>
                             ) : (
                                 <>
-                                    <p className='text-[14.3px] font-kalameh400'>تـور زمینی تهران - استانبول</p>
-                                    <p className='text-[11px] text-[#777676]'>هـتل پنج ســتاره استانبول</p>
+                                    <p className='text-[14.3px] font-kalameh400'>
+                                        تـور {tourDetails?.origin} - {tourDetails?.destination}
+                                    </p>
+                                    <p className='text-[11px] text-[#777676]'>{tourDetails?.accommodation.stars}</p>
                                 </>
                             )}
                         </div>
                     </div>
+
                     <div className='flex flex-col lg:w-[70%] pt-6 gap-y-2'>
                         <h4 className='text-[17.3px] font-kalameh500'>جزئـیات پرداخت</h4>
                         {isVilla ? (
                             <>
-                                {villaReserveDetail.duration.map(day => {
+                                {villaReserveDetail.duration.map((day, index) => {
                                     return (
-                                        <div className='text-[10.6px] text-[#808080] flex justify-between'>
+                                        <div key={index} className='text-[10.6px] text-[#808080] flex justify-between'>
                                             <p>{day.weekDay.name} {day.day} {day.month.name} ماه {day.year}</p>
                                             <p>{villaDetails?.pricePerNight && formatCurrency(+villaDetails?.pricePerNight)} تومــان</p>
                                         </div>
@@ -270,31 +375,27 @@ const PaymentDetail: React.FC<PaymentDetailProps> = ({isVilla, villaDetails}) =>
                             </>
                         ) : (
                             <>
-                                <div className='text-[10.6px] text-[#808080] flex justify-between'>
-                                    <p>مسافر 1 : امیـر محمدی</p>
-                                    <p>800.000 تومــان</p>
-                                </div>
-                                <div className='text-[10.6px] text-[#808080] flex justify-between'>
-                                    <p>مسافر 2 : علیرضا دارابی</p>
-                                    <p>800.000 تومــان</p>
-                                </div>
-                                <div className='text-[10.6px] text-[#808080] flex justify-between'>
-                                    <p>مسافر 3 : ارسلان دارابی</p>
-                                    <p>800.000 تومــان</p>
-                                </div>
+                                {tourReserveDetail.passengersInfo.map((passenger, index) => (
+                                    <div key={passenger.id}
+                                         className='text-[10.6px] text-[#808080] flex justify-between'>
+                                        <p>مسافر {index + 1} : {passenger.firstName} {passenger.lastName}</p>
+                                        <p>{tourDetails?.price && formatCurrency(tourDetails.price)} تومــان</p>
+                                    </div>
+                                ))}
                             </>
                         )}
                     </div>
+
                     <button
                         className='bg-[#15C431] mt-8 w-full lg:w-[80%] rounded-[15px] text-[31px] font-kalameh500 py-2 text-white'
                         onClick={handlePayment}
+                        type='button'
                     >
                         پــــرداخــــت
                     </button>
                 </div>
             </form>
             <Footer/>
-
         </div>
     )
 }

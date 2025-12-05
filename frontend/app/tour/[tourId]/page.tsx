@@ -9,12 +9,15 @@ import Receipt from "@/app/components/process/Receipt";
 import {useQuery} from "@tanstack/react-query";
 import {getTourById} from "@/app/tour/_api/tourApis";
 import Loading from "@/app/components/Loading";
+import {Tour} from "@/app/tour/_types/tourTypes";
+import SelectDropDown from "@/app/components/dropDown/SelectDropDown";
+import Button from "@/app/components/Button";
 
 const TourDetailPage = ({params}: { params: { tourId: string } }) => {
     // const step = useAppSelector(state=>state.stepSlice.step)
     // const dispatch = useAppDispatch()
     const tourId = params.tourId;
-    const {data: tourInfo, isError, isLoading} = useQuery({
+    const {data: tourInfo, isError, isLoading} = useQuery<Tour>({
         queryKey: ['tourInfo'],
         queryFn: () => getTourById(tourId)
     })
@@ -30,15 +33,15 @@ const TourDetailPage = ({params}: { params: { tourId: string } }) => {
         window.scrollTo(0, 0)
         switch (step.step) {
             case 0 :
-                return <TourDetail/>
+                return <TourDetail data={tourInfo}/>
             case 1 :
-                return <Passengers/>
+                return <Passengers data={tourInfo}/>
             case 2 :
-                return <ConfirmInformation/>
+                return <ConfirmInformation tourDetails={tourInfo}/>
             case 3 :
-                return <PaymentDetail/>
+                return <PaymentDetail tourDetails={tourInfo}/>
             case 4 :
-                return <Receipt/>
+                return <Receipt tourDetails={tourInfo}/>
         }
     }
 

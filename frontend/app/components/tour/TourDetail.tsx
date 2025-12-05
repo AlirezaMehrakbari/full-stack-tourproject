@@ -1,3 +1,5 @@
+'use client'
+
 import TourDetail0 from '@/public/images/TourDetail.png'
 import TourDetail1 from '@/public/images/TourDetail1.png'
 import TourDetail2 from '@/public/images/TourDetail2.png'
@@ -7,49 +9,38 @@ import Footer from "@/app/components/footer/footer";
 import Comments from "@/app/components/Comments";
 import Button from "@/app/components/Button";
 import useStep from "@/app/hooks/useStep";
-import {Metadata} from "next";
 import SelectDropDown from "@/app/components/dropDown/SelectDropDown";
-import {useState} from "react";
+import { useEffect } from "react";
 import Stepper from "@/app/components/Stepper";
+import {Tour} from "@/app/tour/_types/tourTypes";
+import moment from 'jalali-moment';
+import {decrementPassenger, incrementPassenger, setTotalPrice, setTravelDate} from "@/app/tour/_slice/bookingSlice";
+import {useAppDispatch, useAppSelector} from "@/app/redux/store";
 
+const TourDetail = ({data}: { data: Tour }) => {
+    const dispatch = useAppDispatch();
+    const { travelDate, passengers, totalPrice } = useAppSelector(state => state.tourReserve);
 
-const TourDetail = () => {
-    const [travelDate, setTravelDate] = useState<string>('تاریخ سفر را مشخص کنید')
-    const [passengers, setPassengers] = useState({
-        adult2: 0,
-        adult1: 0,
-        childFrom2to12: 0,
-        child2: 0
+    const step1 = useStep();
 
-    })
-    let quantity = passengers.adult1 + passengers.adult2 + passengers.childFrom2to12 + passengers.child2
-    const planForDay = [
-        {
-            id: 1,
-            title: 'برنامــه روز اول سـفر',
-            text: 'لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها  لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها',
-            img: TourDetail1
-        },
-        {
-            id: 2,
-            title: 'برنامــه روز دوم سـفر',
-            text: 'لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها  لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها',
-            img: TourDetail1
-        },
-        {
-            id: 3,
-            title: 'برنامــه روز سوم سـفر',
-            text: 'لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها  لـورم ایپـــــســوم متــــــن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و بـا استــفاده از طـراحــان گرافیک اســـت، چاپگرها',
-            img: TourDetail1
-        }
-    ]
+    const quantity = passengers.adult1 + passengers.adult2 + passengers.childFrom2to12 + passengers.child2;
 
-    const step1 = useStep()
+    const calculatedTotalPrice = data?.price ? data.price * quantity : 0;
+
+    useEffect(() => {
+        dispatch(setTotalPrice(calculatedTotalPrice));
+    }, [calculatedTotalPrice, dispatch]);
 
     const handleStep = () => {
-        step1.nextStep()
-        console.log(step1.step)
-    }
+        step1.nextStep();
+    };
+
+    const shamsiStartDate = moment(data.startDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
+    const shamsiEndDate = moment(data.endDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
 
     return (
         <div>
@@ -58,35 +49,42 @@ const TourDetail = () => {
                 <div className='flex item-center justify-between w-full py-8 h-full'>
                     <Image
                         className='w-[70%] object-cover rounded-[12px]'
-                        src={TourDetail0}
+                        src={data?.coverImage || TourDetail0}
                         alt={'Tour Detail Picture'}
+                        width={800}
+                        height={600}
                     />
                     <div className='flex gap-y-3 flex-col w-[25%] justify-between'>
-                        <Image
-                            className='rounded-[12px]'
-                            src={TourDetail1}
-                            alt={'Tour Detail Picture'}
-                        />
-                        <Image
-                            className='rounded-[12px]'
-                            src={TourDetail2}
-                            alt={'Tour Detail Picture'}
-                        />
-                        <Image
-                            className='rounded-[12px]'
-                            src={TourDetail3}
-                            alt={'Tour Detail Picture'}
-                        />
+                        {data?.images?.slice(0, 3).map((img, index) => (
+                            <Image
+                                key={index}
+                                className='rounded-[12px]'
+                                src={img}
+                                alt={`Tour Detail Picture ${index + 1}`}
+                                width={300}
+                                height={200}
+                            />
+                        )) || (
+                            <>
+                                <Image className='rounded-[12px]' src={TourDetail1} alt={'Tour Detail Picture'}/>
+                                <Image className='rounded-[12px]' src={TourDetail2} alt={'Tour Detail Picture'}/>
+                                <Image className='rounded-[12px]' src={TourDetail3} alt={'Tour Detail Picture'}/>
+                            </>
+                        )}
                     </div>
                 </div>
 
-                <h1 className='text-[30px] font-kalameh500 py-16 pr-1'>{'تور تهران - استانبول'}</h1>
+                <h1 className='text-[30px] font-kalameh500 py-16 pr-1'>{data?.title || 'تور تهران - استانبول'}</h1>
 
                 <div className='flex justify-between'>
                     <div className='md:w-[65%] w-full'>
-                        <h4 className='font-kalameh400'>{'تور 3 روزه - هـتل - هواپیما'}</h4>
+                        <h4 className='font-kalameh400'>
+                            {`تور ${data?.duration || 3} روزه - ${data?.accommodation?.type || 'هتل'} - ${data?.transportation || 'هواپیما'}`}
+                        </h4>
                         <p className='font-kalameh400'>مدیریت تور :
-                            <span className='font-kalameh700 pr-2 text-[#2486B0]'>رضا صالحی</span>
+                            <span className='font-kalameh700 pr-2 text-[#2486B0]'>
+                                {data?.tourGuide?.name || 'رضا صالحی'}
+                            </span>
                         </p>
 
                         <div className='grid md:grid-cols-2 xl:grid-cols-3 gap-6 pt-6'>
@@ -103,8 +101,7 @@ const TourDetail = () => {
                                 </svg>
                                 <p className='text-[#A7A8A9] font-kalameh400 pb-2'>اقامتگاه</p>
                                 <p className='w-full font-kalameh500'>
-                                    2 شب هتل استابول<br/>
-                                    1 شب هتل آنتالیا
+                                    {data?.accommodation?.type} {data?.accommodation?.stars} ستاره
                                 </p>
                             </div>
                             <div
@@ -126,7 +123,7 @@ const TourDetail = () => {
                                 </svg>
                                 <p className='text-[#A7A8A9] font-kalameh400 pb-2'>ایاب و ذهاب</p>
                                 <p className='w-full font-kalameh500'>
-                                    سرویس بین شهری
+                                    {data?.transportation || 'سرویس بین شهری'}
                                 </p>
                             </div>
                             <div
@@ -139,7 +136,7 @@ const TourDetail = () => {
                                 </svg>
                                 <p className='text-[#A7A8A9] font-kalameh400 pb-2'>بیمه مسافران</p>
                                 <p className='w-full font-kalameh500'>
-                                    بیمه 10 هزارلیری<br/>
+                                    بیمه مسافرتی<br/>
                                     با پوشش حوادث
                                 </p>
                             </div>
@@ -169,8 +166,11 @@ const TourDetail = () => {
                                 </svg>
                                 <p className='text-[#A7A8A9] font-kalameh400 pb-2'>وعده های غذایی</p>
                                 <p className='w-full font-kalameh500'>
-                                    3 وعده <br/>
-                                    صبحانه ، ناهار ، شام
+                                    {[
+                                        data?.meals?.breakfast && 'صبحانه',
+                                        data?.meals?.lunch && 'ناهار',
+                                        data?.meals?.dinner && 'شام'
+                                    ].filter(Boolean).join(' ، ') || '3 وعده'}
                                 </p>
                             </div>
                             <div
@@ -183,7 +183,7 @@ const TourDetail = () => {
                                 </svg>
                                 <p className='text-[#A7A8A9] font-kalameh400 pb-2'>مدت زمان سفر</p>
                                 <p className='w-full font-kalameh500'>
-                                    3 شب و 4 روز
+                                    {data?.duration ? `${data.duration - 1} شب و ${data.duration} روز` : '3 شب و 4 روز'}
                                 </p>
                             </div>
                             <div
@@ -220,44 +220,43 @@ const TourDetail = () => {
 
                         <div>
                             <h1 className='text-[24px] lg:text-[32px] font-kalameh700 pt-[120px]'>خلاصـه ای از سفر</h1>
-                            <p className='text-[18px] font-kalameh400 pt-[20px] text-justify'>
-                                لـورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان
-                                گرافیک اســـت، چاپگرها و متون بلکه روزنامه و مجله در ستون وسطر سطرآنچنان که لازم است،و
-                                برای شرایط فعلی تکنولوژی لـورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و
-                                با استفاده از طراحان گرافیک اســـت، چاپگرها و متون بلکه روزنامه .
+                            <p className='text-[18px] font-kalameh400 pt-[20px] text-justify pb-[180px]'>
+                                {data?.description || 'لـورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک اســـت، چاپگرها و متون بلکه روزنامه و مجله در ستون وسطر سطرآنچنان که لازم است،و برای شرایط فعلی تکنولوژی لـورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ، و با استفاده از طراحان گرافیک اســـت، چاپگرها و متون بلکه روزنامه .'}
                             </p>
-                            <p className='text-[19px] text-[#3672B7] text-left pb-[180px]'>مشـاهده بیشتر</p>
                             <div className='flex flex-col gap-y-20'>
-                                {planForDay.map(item => {
+                                {data?.itinerary?.map((item, index) => {
                                     return (
-                                        <div key={item.id}>
-                                            <h1 className='text-[32px] font-kalameh700 py-4'>{item.title}</h1>
+                                        <div key={index}>
+                                            <h1 className='text-[32px] font-kalameh700 py-4'>
+                                                روز {item.day}: {item.title}
+                                            </h1>
                                             <div className='flex flex-col lg:flex-row'>
-                                                <p className='text-[16px] xl:text-[18px] w-full font-kalameh400 text-justify p-3'>{item.text}</p>
-                                                <Image
-                                                    className='lg:w-[40%] w-full rounded-[20px] object-cover'
-                                                    src={item.img}
-                                                    alt={`${item.title} Picture`}
-                                                />
+                                                <p className='text-[16px] xl:text-[18px] w-full font-kalameh400 text-justify p-3'>
+                                                    {item.description}
+                                                </p>
                                             </div>
+                                            {item.activities && item.activities.length > 0 && (
+                                                <div className='bg-gray-50 rounded-lg p-4 mt-4'>
+                                                    <h4 className='font-kalameh700 text-gray-700 mb-2'>فعالیت‌های
+                                                        امروز:</h4>
+                                                    <ul className='list-disc list-inside space-y-1 text-gray-600'>
+                                                        {item.activities.map((activity, actIndex) => (
+                                                            <li key={actIndex}>{activity}</li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}
                             </div>
 
-
-                            {/*قسمت موبایل انتخاب تاریخ تور*/}
+                            {/* قسمت موبایل انتخاب تاریخ تور */}
                             <div
                                 className='flex md:hidden flex-col gap-y-4 top-[10rem] rounded-[12px] md:w-[30%] bg-[#F1F1F1] p-4 mt-4 h-full overflow-hidden'>
                                 <h1 className='text-[24px] lg:text-[30.8px] font-kalameh500 text-center pb-6'> انتخـاب
                                     تاریـخ
                                     تـور</h1>
-                                <div className='flex items-center gap-x-[8px]'>
-                                    <button
-                                        className='text-[22.8px] font-kalameh400 border-[0.2px] px-[32px] py-[4px] text-[#848282] active:text-[#000] rounded-[10px]'>{'آبان'}</button>
-                                    <button
-                                        className='text-[22.8px] font-kalameh400 border-[0.2px] px-[32px] py-[4px] text-[#848282] active:text-[#000] rounded-[10px]'>{'آذر'}</button>
-                                </div>
                                 <SelectDropDown
                                     arrowBlack
                                     label={travelDate}
@@ -283,9 +282,11 @@ const TourDetail = () => {
                                 >
                                     <div
                                         className='text-[18px] text-[#616161] divide-y-[1px] flex flex-col gap-y-2 py-2 divide-[#D0D0D0]'>
-                                        <div onClick={() => setTravelDate('17 آبـان - 20 آبـان')}>17 آبـان - 20 آبـان
-                                        </div>
-                                        <div onClick={() => setTravelDate('22 آبـان - 25 آبـان')}>22 آبـان - 25 آبـان
+                                        <div
+                                            onClick={() => dispatch(setTravelDate(`${shamsiStartDate} - ${shamsiEndDate}`))}
+                                            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                                        >
+                                            {shamsiStartDate} - {shamsiEndDate}
                                         </div>
                                     </div>
                                 </SelectDropDown>
@@ -315,39 +316,10 @@ const TourDetail = () => {
                                 >
                                     <div className='flex flex-col gap-y-2 text-[18px] text-[#616161]'>
                                         <div className='flex items-center justify-between'>
-                                            <p>بزرگسال در اتاق دو تخته</p>
+                                            <p>بزرگسال بالای 12 سال</p>
                                             <div className='flex items-center gap-x-2'>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        adult2: prevState.adult2 + 1
-                                                    }))}
-                                                    className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
-                                                    type='button'
-                                                >
-                                                    +
-                                                </button>
-                                                <span>{passengers.adult2}</span>
-                                                <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        adult2: prevState.adult2 === 0 ? 0 : prevState.adult2 - 1
-                                                    }))}
-                                                    className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
-                                                    type='button'
-                                                >
-                                                    -
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className='flex items-center justify-between'>
-                                            <p>بزرگسال در اتاق یک تخته</p>
-                                            <div className='flex items-center gap-x-2'>
-                                                <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        adult1: prevState.adult1 + 1
-                                                    }))}
+                                                    onClick={() => dispatch(incrementPassenger('adult1'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -355,10 +327,7 @@ const TourDetail = () => {
                                                 </button>
                                                 <span>{passengers.adult1}</span>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        adult1: prevState.adult1 === 0 ? 0 : prevState.adult1 - 1
-                                                    }))}
+                                                    onClick={() => dispatch(decrementPassenger('adult1'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -370,10 +339,7 @@ const TourDetail = () => {
                                             <p>کودک 2 تا 12 سال</p>
                                             <div className='flex items-center gap-x-2'>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        childFrom2to12: prevState.childFrom2to12 + 1
-                                                    }))}
+                                                    onClick={() => dispatch(incrementPassenger('childFrom2to12'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -381,10 +347,7 @@ const TourDetail = () => {
                                                 </button>
                                                 <span>{passengers.childFrom2to12}</span>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        childFrom2to12: prevState.childFrom2to12 === 0 ? 0 : prevState.childFrom2to12 - 1
-                                                    }))}
+                                                    onClick={() => dispatch(decrementPassenger('childFrom2to12'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -396,10 +359,7 @@ const TourDetail = () => {
                                             <p>کودک زیر 2 سال</p>
                                             <div className='flex items-center gap-x-2'>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        child2: prevState.child2 + 1
-                                                    }))}
+                                                    onClick={() => dispatch(incrementPassenger('child2'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -407,10 +367,7 @@ const TourDetail = () => {
                                                 </button>
                                                 <span>{passengers.child2}</span>
                                                 <button
-                                                    onClick={() => setPassengers(prevState => ({
-                                                        ...prevState,
-                                                        child2: prevState.child2 === 0 ? 0 : prevState.child2 - 1
-                                                    }))}
+                                                    onClick={() => dispatch(decrementPassenger('child2'))}
                                                     className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                                     type='button'
                                                 >
@@ -422,30 +379,86 @@ const TourDetail = () => {
                                 </SelectDropDown>
                                 <div className='flex items-center justify-between'>
                                     <p className='text-[17.5px] font-kalameh400'>مجموع قیمت :</p>
-                                    <p className='text-[22.8px] font-kalameh500'> 5.000.000 تومـان</p>
+                                    <p className='text-[18px] font-kalameh700 text-[#FF7512]'>
+                                        {totalPrice.toLocaleString('fa-IR')} تومان
+                                    </p>
                                 </div>
                                 <Button styles='text-[24px] font-kalameh400 rounded-[5px] h-[56px]'
                                         onClick={handleStep}>
                                     تایید و ادامـه
                                 </Button>
                             </div>
-                            {/*قسمت ثبت نظر*/} {/*قسمت کامنت ها*/}
-                            <div className='pt-20'>
-                                {/*<Comments disabled={true}/>*/}
+
+                            <div className='pt-[120px]'>
+                                <h1 className='text-[32px] font-kalameh700'>امکانات تور</h1>
+                                <div className='grid grid-cols-2 gap-6 pt-8'>
+                                    {data?.facilities && data.facilities.length > 0 ? (
+                                        data.facilities.map((facility, index) => (
+                                            <div key={index} className='flex items-center gap-x-2'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                     viewBox="0 0 24 24" fill="none">
+                                                    <path
+                                                        d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16.78 9.7L11.11 15.37C10.97 15.51 10.78 15.59 10.58 15.59C10.38 15.59 10.19 15.51 10.05 15.37L7.22 12.54C6.93 12.25 6.93 11.77 7.22 11.48C7.51 11.19 7.99 11.19 8.28 11.48L10.58 13.78L15.72 8.64C16.01 8.35 16.49 8.35 16.78 8.64C17.07 8.93 17.07 9.4 16.78 9.7Z"
+                                                        fill="#10B981"/>
+                                                </svg>
+                                                <p className='text-[16px] font-kalameh400'>{facility}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <div className='flex items-center gap-x-2'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                     viewBox="0 0 24 24" fill="none">
+                                                    <path
+                                                        d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16.78 9.7L11.11 15.37C10.97 15.51 10.78 15.59 10.58 15.59C10.38 15.59 10.19 15.51 10.05 15.37L7.22 12.54C6.93 12.25 6.93 11.77 7.22 11.48C7.51 11.19 7.99 11.19 8.28 11.48L10.58 13.78L15.72 8.64C16.01 8.35 16.49 8.35 16.78 8.64C17.07 8.93 17.07 9.4 16.78 9.7Z"
+                                                        fill="#10B981"/>
+                                                </svg>
+                                                <p className='text-[16px] font-kalameh400'>بیمه مسافرتی</p>
+                                            </div>
+                                            <div className='flex items-center gap-x-2'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                     viewBox="0 0 24 24" fill="none">
+                                                    <path
+                                                        d="M12 2C6.49 2 2 6.49 2 12C2 17.51 6.49 22 12 22C17.51 22 22 17.51 22 12C22 6.49 17.51 2 12 2ZM16.78 9.7L11.11 15.37C10.97 15.51 10.78 15.59 10.58 15.59C10.38 15.59 10.19 15.51 10.05 15.37L7.22 12.54C6.93 12.25 6.93 11.77 7.22 11.48C7.51 11.19 7.99 11.19 8.28 11.48L10.58 13.78L15.72 8.64C16.01 8.35 16.49 8.35 16.78 8.64C17.07 8.93 17.07 9.4 16.78 9.7Z"
+                                                        fill="#10B981"/>
+                                                </svg>
+                                                <p className='text-[16px] font-kalameh400'>تور لیدر</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className='pt-[120px]'>
+                                <h1 className='text-[32px] font-kalameh700'>قوانین تور</h1>
+                                <div className='space-y-4 pt-8'>
+                                    {data?.rules && data.rules.length > 0 ? (
+                                        data.rules.map((rule, index) => (
+                                            <div key={index} className='flex items-start gap-x-3'>
+                                                <div className='w-2 h-2 rounded-full bg-[#FF7512] mt-2'></div>
+                                                <p className='text-[16px] font-kalameh400 text-justify'>{rule}</p>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <>
+                                            <div className='flex items-start gap-x-3'>
+                                                <div className='w-2 h-2 rounded-full bg-[#FF7512] mt-2'></div>
+                                                <p className='text-[16px] font-kalameh400 text-justify'>
+                                                    لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
-                    {/*قسمت دکستاپ*/}
+
+                    {/* قسمت دسکتاپ انتخاب تاریخ تور */}
                     <div
                         className='hidden md:flex flex-col gap-y-4 sticky top-[10rem] rounded-[12px] md:w-[30%] bg-[#F1F1F1] p-4 h-full overflow-hidden'>
                         <h1 className='text-[24px] lg:text-[30.8px] font-kalameh500 text-center pb-6'> انتخـاب تاریـخ
                             تـور</h1>
-                        <div className='flex items-center gap-x-[8px]'>
-                            <button
-                                className='text-[22.8px] font-kalameh400 border-[0.2px] px-[32px] py-[4px] text-[#848282] active:text-[#000] rounded-[10px]'>{'آبان'}</button>
-                            <button
-                                className='text-[22.8px] font-kalameh400 border-[0.2px] px-[32px] py-[4px] text-[#848282] active:text-[#000] rounded-[10px]'>{'آذر'}</button>
-                        </div>
                         <SelectDropDown
                             arrowBlack
                             label={travelDate}
@@ -469,8 +482,12 @@ const TourDetail = () => {
                         >
                             <div
                                 className='text-[18px] text-[#616161] divide-y-[1px] flex flex-col gap-y-2 py-2 divide-[#D0D0D0]'>
-                                <div onClick={() => setTravelDate('17 آبـان - 20 آبـان')}>17 آبـان - 20 آبـان</div>
-                                <div onClick={() => setTravelDate('22 آبـان - 25 آبـان')}>22 آبـان - 25 آبـان</div>
+                                <div
+                                    onClick={() => dispatch(setTravelDate(`${shamsiStartDate} - ${shamsiEndDate}`))}
+                                    className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                                >
+                                    {shamsiStartDate} - {shamsiEndDate}
+                                </div>
                             </div>
                         </SelectDropDown>
                         <SelectDropDown
@@ -497,47 +514,17 @@ const TourDetail = () => {
                         >
                             <div className='flex flex-col gap-y-2 text-[18px] text-[#616161]'>
                                 <div className='flex items-center justify-between'>
-                                    <p>بزرگسال در اتاق دو تخته</p>
+                                    <p>بزرگسال بالای 12 سال</p>
                                     <div className='flex items-center justify-between w-[80px] gap-x-2'>
                                         <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                adult2: prevState.adult2 + 1
-                                            }))}
-                                            className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
-                                        >
-                                            +
-                                        </button>
-                                        <span>{passengers.adult2}</span>
-                                        <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                adult2: prevState.adult2 === 0 ? 0 : prevState.adult2 - 1
-                                            }))}
-                                            className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
-                                        >
-                                            -
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className='flex items-center justify-between'>
-                                    <p>بزرگسال در اتاق یک تخته</p>
-                                    <div className='flex items-center justify-between w-[80px] gap-x-2'>
-                                        <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                adult1: prevState.adult1 + 1
-                                            }))}
+                                            onClick={() => dispatch(incrementPassenger('adult1'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                         >
                                             +
                                         </button>
                                         <span>{passengers.adult1}</span>
                                         <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                adult1: prevState.adult1 === 0 ? 0 : prevState.adult1 - 1
-                                            }))}
+                                            onClick={() => dispatch(decrementPassenger('adult1'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                         >
                                             -
@@ -548,20 +535,14 @@ const TourDetail = () => {
                                     <p>کودک 2 تا 12 سال</p>
                                     <div className='flex items-center justify-between w-[80px] gap-x-2'>
                                         <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                childFrom2to12: prevState.childFrom2to12 + 1
-                                            }))}
+                                            onClick={() => dispatch(incrementPassenger('childFrom2to12'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                         >
                                             +
                                         </button>
                                         <span>{passengers.childFrom2to12}</span>
                                         <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                childFrom2to12: prevState.childFrom2to12 === 0 ? 0 : prevState.childFrom2to12 - 1
-                                            }))}
+                                            onClick={() => dispatch(decrementPassenger('childFrom2to12'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                         >
                                             -
@@ -573,20 +554,14 @@ const TourDetail = () => {
                                     <div className='flex items-center justify-between w-[80px] gap-x-2'>
                                         <button
                                             type='button'
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                child2: prevState.child2 + 1
-                                            }))}
+                                            onClick={() => dispatch(incrementPassenger('child2'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#15247B] text-white rounded-full'
                                         >
                                             +
                                         </button>
                                         <span>{passengers.child2}</span>
                                         <button
-                                            onClick={() => setPassengers(prevState => ({
-                                                ...prevState,
-                                                child2: prevState.child2 === 0 ? 0 : prevState.child2 - 1
-                                            }))}
+                                            onClick={() => dispatch(decrementPassenger('child2'))}
                                             className='flex justify-center items-center w-[21px] h-[21px] bg-[#5663A9] text-white rounded-full'
                                         >
                                             -
@@ -597,7 +572,9 @@ const TourDetail = () => {
                         </SelectDropDown>
                         <div className='flex items-center justify-between'>
                             <p className='text-[17.5px] font-kalameh400'>مجموع قیمت :</p>
-                            <p className='text-[22.8px] font-kalameh500'> 5.000.000 تومـان</p>
+                            <p className='text-[18px] font-kalameh700 text-[#FF7512]'>
+                                {totalPrice.toLocaleString('fa-IR')} تومان
+                            </p>
                         </div>
                         <Button styles='text-[24px] font-kalameh400 rounded-[5px] h-[56px]' onClick={handleStep}>
                             تایید و ادامـه

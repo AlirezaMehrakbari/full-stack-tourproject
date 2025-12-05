@@ -1,19 +1,87 @@
-import React from 'react'
+import React, {useState} from 'react'
 import Footer from "@/app/components/footer/footer";
 import Button from "@/app/components/Button";
 import useStep from "@/app/hooks/useStep";
 import Stepper from "@/app/components/Stepper";
+import {Tour} from "@/app/tour/_types/tourTypes";
+import moment from "jalali-moment";
+import {useAppDispatch, useAppSelector} from "@/app/redux/store";
+import {addPassengerInfo} from "@/app/tour/_slice/bookingSlice";
+import DatePicker from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
 
-const Passengers = () => {
-    const passengers = [1, 2, 3]
-    const step = useStep()
+const Passengers = ({data}: { data: Tour }) => {
+    const dispatch = useAppDispatch();
+    const { passengers, passengersInfo } = useAppSelector(state => state.tourReserve);
+    const step = useStep();
+
+    const totalPassengers = passengers.adult1 + passengers.adult2 + passengers.childFrom2to12 + passengers.child2;
+    const passengersArray = Array.from({ length: totalPassengers }, (_, i) => i + 1);
+
+    const [currentPassengerData, setCurrentPassengerData] = useState<{[key: number]: any}>({});
+
+    const shamsiStartDate = moment(data.startDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
+    const shamsiEndDate = moment(data.endDate, 'YYYY-MM-DD')
+        .locale('fa')
+        .format('jD jMMMM');
+
+    const handleInputChange = (passengerId: number, field: string, value: string) => {
+        setCurrentPassengerData(prev => ({
+            ...prev,
+            [passengerId]: {
+                ...prev[passengerId],
+                [field]: value
+            }
+        }));
+    };
+
+    const handleDateChange = (passengerId: number, field: string, date: any) => {
+        const formattedDate = date ? date.format('YYYY/MM/DD') : '';
+        handleInputChange(passengerId, field, formattedDate);
+    };
+
+    const handleSubmitPassenger = (e: React.FormEvent, passengerId: number) => {
+        e.preventDefault();
+
+        const passengerData = currentPassengerData[passengerId] || {};
+
+        dispatch(addPassengerInfo({
+            id: passengerId,
+            firstName: passengerData.firstName || '',
+            lastName: passengerData.lastName || '',
+            nationalId: passengerData.nationalId || '',
+            nationality: passengerData.nationality || '',
+            gender: passengerData.gender || 'زن',
+            birthDate: passengerData.birthDate || '',
+            passportNumber: passengerData.passportNumber || '',
+            passportExpiry: passengerData.passportExpiry || ''
+        }));
+    };
+
+    const handleFinalSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (passengersInfo.length === totalPassengers) {
+            step.nextStep();
+        } else {
+            alert('لطفا اطلاعات تمام مسافران را ثبت کنید');
+        }
+    };
+
     return (
         <div>
             <Stepper/>
-            <form className='pt-[10rem]'>
-                {passengers.map(passenger => {
+            <div className='pt-[10rem]'>
+                {passengersArray.map((passenger, index) => {
+                    const isSubmitted = passengersInfo.some(p => p.id === passenger);
+
                     return (
                         <form
+                            key={passenger}
+                            onSubmit={(e) => handleSubmitPassenger(e, passenger)}
                             className='flex flex-col justify-between w-[80%] lg:w-[50%] bg-[#F7F7F6] mx-auto my-20 py-[20px] lg:px-[50px] xl:px-[100px] lg:py-[64px] rounded-[14px]'>
                             <div className='flex flex-col lg:flex-row items-center justify-between gap-y-4'>
                                 <div className='flex items-center gap-x-2'>
@@ -37,8 +105,8 @@ const Passengers = () => {
                                             strokeLinejoin="round"/>
                                     </svg>
                                     <div>
-                                        <h4 className='text-[19.7px] font-kalameh500'>مشخـصات مسافر 1</h4>
-                                        <p className='text-[17px] text-[#616060]'>تــور تهران - استانبول</p>
+                                        <h4 className='text-[19.7px] font-kalameh500'>مشخـصات مسافر {passenger}</h4>
+                                        <p className='text-[17px] text-[#616060]'>تــور {data.origin} - {data.destination}</p>
                                     </div>
                                 </div>
                                 <div className='flex items-center gap-x-2'>
@@ -59,101 +127,124 @@ const Passengers = () => {
                                     </svg>
                                     <div>
                                         <h4 className='text-[19.7px] font-kalameh500'>تاریـخ سفر</h4>
-                                        <p className='text-[17px] text-[#616060]'>17 - 20 آبان</p>
+                                        <p className='text-[17px] text-[#616060]'>{shamsiStartDate} - {shamsiEndDate}</p>
                                     </div>
                                 </div>
                             </div>
 
                             <div className='grid md:grid-cols-2 gap-x-8 w-[90%] mx-auto'>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
                                     <input
                                         className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
                                         dir={'ltr'}
+                                        value={currentPassengerData[passenger]?.firstName || ''}
+                                        onChange={(e) => handleInputChange(passenger, 'firstName', e.target.value)}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>نام
-                                        لاتین</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>نام لاتین</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
                                     <input
                                         className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
                                         dir={'ltr'}
+                                        value={currentPassengerData[passenger]?.nationalId || ''}
+                                        onChange={(e) => handleInputChange(passenger, 'nationalId', e.target.value)}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>کد
-                                        ملی</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>کد ملی</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
                                     <input
                                         className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
                                         dir={'ltr'}
+                                        value={currentPassengerData[passenger]?.lastName || ''}
+                                        onChange={(e) => handleInputChange(passenger, 'lastName', e.target.value)}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>نـام
-                                        خـانوادگی
-                                        لاتین</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>نـام خـانوادگی لاتین</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
                                     <input
                                         className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
+                                        value={currentPassengerData[passenger]?.nationality || ''}
+                                        onChange={(e) => handleInputChange(passenger, 'nationality', e.target.value)}
+                                        required
                                     />
                                     <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>ملیت</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
-                                    <select className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'>
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
+                                    <select
+                                        className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
+                                        value={currentPassengerData[passenger]?.gender || 'زن'}
+                                        onChange={(e) => handleInputChange(passenger, 'gender', e.target.value)}
+                                        required
+                                    >
                                         <option>زن</option>
                                         <option>مرد</option>
                                     </select>
                                     <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>جنسیـت</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-[45px]">
-                                    <input
-                                        className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
-                                        dir={'ltr'}
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-[45px]">
+                                    <DatePicker
+                                        calendar={persian}
+                                        locale={persian_fa}
+                                        value={currentPassengerData[passenger]?.birthDate || ''}
+                                        onChange={(date) => handleDateChange(passenger, 'birthDate', date)}
+                                        format="YYYY/MM/DD"
+                                        inputClass='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
+                                        containerClassName='w-full'
+                                        style={{
+                                            width: '100%',
+                                            backgroundColor: '#F7F7F6'
+                                        }}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>تاریخ
-                                        تولد</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>تاریخ تولد</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
                                     <input
                                         className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
                                         dir={'ltr'}
+                                        value={currentPassengerData[passenger]?.passportNumber || ''}
+                                        onChange={(e) => handleInputChange(passenger, 'passportNumber', e.target.value)}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>شماره
-                                        پاسپورت</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>شماره پاسپورت</p>
                                 </div>
-                                <div
-                                    className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px]  rounded-md relative mt-10">
-                                    <input
-                                        className='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
-                                        dir={'ltr'}
+                                <div className="bg-gradient-to-t from-[#000] to-[#F7F7F6] to-90% p-[1px] rounded-md relative mt-10">
+                                    <DatePicker
+                                        calendar={persian}
+                                        locale={persian_fa}
+                                        value={currentPassengerData[passenger]?.passportExpiry || ''}
+                                        onChange={(date) => handleDateChange(passenger, 'passportExpiry', date)}
+                                        format="YYYY/MM/DD"
+                                        inputClass='bg-[#F7F7F6] p-2 outline-0 w-full rounded-md'
+                                        containerClassName='w-full'
+                                        style={{
+                                            width: '100%',
+                                            backgroundColor: '#F7F7F6'
+                                        }}
+                                        required
                                     />
-                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>تاریخ
-                                        انقضاء
-                                        پاسپورت</p>
+                                    <p className='absolute top-[-12px] text-[#8C8C8C] text-[17px] right-[8px]'>تاریخ انقضاء پاسپورت</p>
                                 </div>
                             </div>
                             <button
                                 type='submit'
-                                className='bg-[#212F81] text-white font-kalameh400 w-[30%] mx-auto h-[45px] mt-10 rounded-[8px]'
+                                className={`${isSubmitted ? 'bg-green-600' : 'bg-[#212F81]'} text-white font-kalameh400 w-[30%] mx-auto h-[45px] mt-10 rounded-[8px]`}
                             >
-                                ثبت اطلاعات
+                                {isSubmitted ? '✓ ثبت شده' : 'ثبت اطلاعات'}
                             </button>
                         </form>
                     )
                 })}
                 <Button
-                    type='submit'
                     styles='text-[28px] font-kalameh500 mx-auto h-[61px] mt-10 rounded-[16px] px-4'
-                    onClick={step.nextStep}
+                    onClick={handleFinalSubmit}
                 >
                     ثبت اطلاعات نهایی
                 </Button>
-            </form>
+            </div>
             <Footer/>
         </div>
     )
