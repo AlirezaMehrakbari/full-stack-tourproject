@@ -1,5 +1,3 @@
-// app/types/VillaTypes.ts
-
 export type ReviewApi = {
     user: string
     rating: number
@@ -8,35 +6,54 @@ export type ReviewApi = {
     _id: string
 };
 
+export interface Owner {
+    userId: string | number
+    name: string
+    phone: string
+    description: string
+}
+
+export interface Rating {
+    average: number
+    count: number
+}
+
+
 export type VillaApiModel = {
-    id: number;
-    title: string;
-    description?: string;
-    city: string;
-    province: string;
-    address?: string;
-    area?: number;
-    suitableFor?: string[];
-    numRooms?: number;
-    floor?: number;
-    capacity?: number;
-    pricePerNight?: number;
-    pricePerPerson?: number;
-    rules?: string;
-    ownerName?: string;
-    ownerDescription?: string;
-    ownerId?: number;
-    ownerPhoneNumber?: string;
-    ownerNationalCode?: string;
-    images?: string[];
-    facilities?: string[];
-    avgRating?: number;
-    numReviews?: number;
-    reviews?: ReviewApi[];
-    createdAt?: string;
-    updatedAt?: string;
-    constructionYear: number,
-    geo?: { lng: string; lat: string };
+    owner: Owner
+    rating: Rating
+    _id: string
+    id: number
+    title: string
+    description: string
+    province: string
+    city: string
+    address: string
+    area: number
+    suitableFor: string
+    numRooms: number
+    numBeds: number
+    numBathrooms: number
+    floor: any
+    constructionYear: any
+    capacity: number
+    pricePerNight: number
+    pricePerPerson: any
+    images: string[]
+    coverImage: string
+    facilities: string[]
+    reviews: any[]
+    bookedDates: any[]
+    rules: string[]
+    cancellationPolicy: string
+    availability: boolean
+    featured: boolean
+    status: string
+    createdAt: string
+    updatedAt: string
+    __v: number
+    avgRating: number
+    numReviews: number
 };
 
 export type VillaFrontModel = {
@@ -52,7 +69,7 @@ export type VillaFrontModel = {
     layer: string;
     pricePerNight: string;
     pricePerAdditionalPerson: string;
-    rules: string;
+    rules: string[];
     deleted_at: string;
     created_at: string;
     updated_at: string;
@@ -94,3 +111,24 @@ export type VillaFrontModel = {
         medias: any[];
     };
 };
+
+export interface CreateVillaData {
+    title: string;
+    description: string;
+    pricePerNight: number;
+    pricePerPerson: number;
+    capacity: number;
+    numRooms: number;
+    suitableFor: string[];
+    constructionYear: number;
+    floor: number;
+    area: number;
+    province: string;
+    city: string;
+    address: string;
+    facilities: string[];
+    images: string[];
+    rules: string[];
+    ownerName: string;
+    ownerDescription: string;
+}

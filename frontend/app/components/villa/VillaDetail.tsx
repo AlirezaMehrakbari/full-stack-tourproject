@@ -203,10 +203,6 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                     <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.capacity} نفر</p>
                                 </div>
                                 <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
-                                    <p className='text-[12px] font-kalameh400 py-[12px] px-4'>سال ساخت</p>
-                                    <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.constructionYear}</p>
-                                </div>
-                                <div className='bg-[#F8F8F8] w-full rounded-[6px] flex justify-between'>
                                     <p className='text-[12px] font-kalameh400 py-[12px] px-4'>طبـقه</p>
                                     <p className='text-[12px] font-kalameh500 py-[12px] px-4'>{villaDetails?.layer}</p>
                                 </div>
@@ -283,6 +279,28 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                 <p className='whitespace-pre  lg:text-[24px] text-[#888888]'>
                                     {villaDetails.address}
                                 </p>
+                            </div>
+                        </div>
+                        <div className={"pt-10"}>
+                            <h1 className='text-[32px] font-kalameh700'>قوانین</h1>
+                            <div className='space-y-4 pt-8'>
+                                {villaDetails?.rules && villaDetails.rules.length > 0 ? (
+                                    villaDetails.rules.map((rule, index) => (
+                                        <div key={index} className='flex items-start gap-x-3'>
+                                            <div className='w-2 h-2 rounded-full bg-[#FF7512] mt-2'></div>
+                                            <p className='text-[16px] font-kalameh400 text-justify'>{rule}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className='flex items-start gap-x-3'>
+                                            <div className='w-2 h-2 rounded-full bg-[#FF7512] mt-2'></div>
+                                            <p className='text-[16px] font-kalameh400 text-justify'>
+                                                لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ
+                                            </p>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                         <div className='pt-20'>
@@ -526,6 +544,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                         </form>
                     </section>
                 </section>
+
             </div>
             <ToastContainer
                 rtl

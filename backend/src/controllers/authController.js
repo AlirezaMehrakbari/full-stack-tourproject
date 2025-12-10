@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
-
+// ورود شماره تلفن و ارسال کد
 export const enterPhoneNumber = async (req, res) => {
     try {
         const {phoneNumber} = req.body;
@@ -24,91 +24,87 @@ export const enterPhoneNumber = async (req, res) => {
         }
 
         return res.status(200).json({
-            message: "Verification code generated",
-            code,
+            success: true,
+            message: "کد تایید ارسال شد",
+            code, // در production حذف شود
             userExists: Boolean(user.firstName),
         });
 
     } catch (error) {
         console.log("ENTER PHONE ERROR:", error);
-        return res.status(500).json({message: "Server error"});
+        return res.status(500).json({
+            success: false,
+            message: "خطای سرور"
+        });
     }
 };
 
-
+// تایید کد ارسالی
 export const phoneNumberVerification = async (req, res) => {
     try {
         const {phoneNumber, code} = req.body;
 
         const user = await User.findOne({phoneNumber});
 
-        if (!user) return res.status(404).json({message: "User not found"});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "کاربر یافت نشد"
+            });
+        }
 
-        if (user.verificationCode !== code)
-            return res.status(400).json({message: "Invalid verification code"});
+        if (user.verificationCode !== code) {
+            return res.status(400).json({
+                success: false,
+                message: "کد تایید نامعتبر است"
+            });
+        }
 
-        if (Date.now() > user.verificationCodeExpires)
-            return res.status(400).json({message: "Verification code expired"});
+        if (Date.now() > user.verificationCodeExpires) {
+            return res.status(400).json({
+                success: false,
+                message: "کد تایید منقضی شده است"
+            });
+        }
+
+        // علامت‌گذاری کاربر به عنوان تایید شده
+        user.isVerified = true;
+        await user.save();
 
         return res.json({
-            message: "Verified",
+            success: true,
+            message: "شماره تلفن تایید شد",
             verified: true,
             userExists: Boolean(user.firstName),
         });
 
     } catch (error) {
         console.log("VERIFICATION ERROR:", error);
-        return res.status(500).json({message: "Server error"});
+        return res.status(500).json({
+            success: false,
+            message: "خطای سرور"
+        });
     }
 };
 
-
+// ورود کاربر (برای کاربران موجود)
 export const login = async (req, res) => {
     try {
         const {phoneNumber} = req.body;
 
         const user = await User.findOne({phoneNumber});
 
-        if (!user)
-            return res.status(404).json({message: "User not found"});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "کاربر یافت نشد"
+            });
+        }
 
-        const token = jwt.sign(
-            {id: user._id},
-            process.env.JWT_SECRET,
-            {expiresIn: "7d"}
-        );
-
-        return res.json({
-            message: "Logged in successfully",
-            token,
-            user,
-        });
-
-    } catch (error) {
-        console.log("LOGIN ERROR:", error);
-        return res.status(500).json({message: "Server error"});
-    }
-};
-
-
-export const register = async (req, res) => {
-    try {
-        const {firstName, lastName, phoneNumber, role} = req.body;
-
-        let user = await User.findOne({phoneNumber});
-
-
-        if (user) {
-            user.firstName = firstName;
-            user.lastName = lastName;
-            user.role = role || "user";
-            await user.save();
-        } else {
-            user = await User.create({
-                firstName,
-                lastName,
-                phoneNumber,
-                role: role || "user",
+        if (!user.firstName) {
+            return res.status(400).json({
+                success: false,
+                message: "لطفاً ابتدا ثبت‌نام کنید"
             });
         }
 
@@ -122,34 +118,117 @@ export const register = async (req, res) => {
             {expiresIn: "7d"}
         );
 
+        // حذف فیلدهای حساس
+        const userResponse = user.toObject();
+        delete userResponse.verificationCode;
+        delete userResponse.verificationCodeExpires;
+
+        return res.json({
+            success: true,
+            message: "ورود موفقیت‌آمیز",
+            token,
+            user: userResponse,
+        });
+
+    } catch (error) {
+        console.log("LOGIN ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "خطای سرور"
+        });
+    }
+};
+
+// ثبت‌نام کاربر جدید
+export const register = async (req, res) => {
+    try {
+        const {firstName, lastName, phoneNumber, role} = req.body;
+
+        // اعتبارسنجی ورودی‌ها
+        if (!firstName || !lastName || !phoneNumber) {
+            return res.status(400).json({
+                success: false,
+                message: "لطفاً تمام فیلدهای الزامی را پر کنید"
+            });
+        }
+
+        let user = await User.findOne({phoneNumber});
+
+        if (user) {
+            // به‌روزرسانی کاربر موجود
+            user.firstName = firstName;
+            user.lastName = lastName;
+            user.role = role || "user";
+            user.isVerified = true;
+            await user.save();
+        } else {
+            // ایجاد کاربر جدید
+            user = await User.create({
+                firstName,
+                lastName,
+                phoneNumber,
+                role: role || "user",
+                isVerified: true
+            });
+        }
+
+        const token = jwt.sign(
+            {
+                id: user._id,
+                phoneNumber: user.phoneNumber,
+                role: user.role
+            },
+            process.env.JWT_SECRET,
+            {expiresIn: "7d"}
+        );
+
+        // حذف فیلدهای حساس
+        const userResponse = user.toObject();
+        delete userResponse.verificationCode;
+        delete userResponse.verificationCodeExpires;
+
         return res.status(201).json({
-            message: "User created",
-            user,
+            success: true,
+            message: "ثبت‌نام موفقیت‌آمیز",
+            user: userResponse,
             token
         });
 
     } catch (error) {
         console.log("REGISTER ERROR:", error);
-        return res.status(500).json({message: "Server error"});
+        return res.status(500).json({
+            success: false,
+            message: "خطای سرور",
+            error: error.message
+        });
     }
 };
 
-
+// دریافت اطلاعات کاربر جاری
 export const getMe = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
-            return res.status(401).json({message: "Unauthorized"});
+            return res.status(401).json({
+                success: false,
+                message: "احراز هویت نشده"
+            });
         }
-        const user = await User.findById(req.user.id).select('-password');
+
+        const user = await User.findById(req.user.id).select('-verificationCode -verificationCodeExpires');
 
         if (!user) {
-            return res.status(404).json({message: "User not found"});
+            return res.status(404).json({
+                success: false,
+                message: "کاربر یافت نشد"
+            });
         }
 
         res.json(user);
     } catch (error) {
-        res.status(500).json({message: "Server error", error: error.message});
+        res.status(500).json({
+            success: false,
+            message: "خطای سرور",
+            error: error.message
+        });
     }
 };
-
-

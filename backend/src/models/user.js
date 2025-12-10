@@ -1,25 +1,73 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
+const { Schema } = mongoose;
+
+const userSchema = new Schema({
     phoneNumber: {
         type: String,
-        required: true,
-        unique: true
+        required: [true, 'شماره تلفن الزامی است'],
+        unique: true,
+        trim: true
     },
-    firstName: String,
-    lastName: String,
+    nationalId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true
+    },
+    firstName: {
+        type: String,
+        default: "",
+        trim: true
+    },
+    lastName: {
+        type: String,
+        default: "",
+        trim: true
+    },
+    email: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true,
+        lowercase: true
+    },
+    city: {
+        type: String,
+        default: "",
+        trim: true
+    },
+    profileImage: {
+        type: String,
+        default: ""
+    },
+    description: {
+        type: String,
+        default: ""
+    },
     role: {
         type: String,
-        default: "user"
+        enum: ['user', 'owner', 'admin'],
+        default: 'user'
     },
-
-    verificationCode: String,
-    verificationCodeExpires: Date,
-
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationCode: {
+        type: String
+    },
+    verificationCodeExpires: {
+        type: Date
+    },
     favorites: {
         type: [Number],
         default: []
     }
+}, {
+    timestamps: true
 });
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+export default User;

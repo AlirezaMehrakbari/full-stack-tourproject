@@ -4,6 +4,7 @@ import hotelRoutes from "./routes/hotelRoutes.js";
 import villaRoutes from "./routes/villaRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import tourRoutes from "./routes/tourRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/hotels", hotelRoutes);
 app.use("/api/villas", villaRoutes);
 app.use("/api/tours", tourRoutes);
 app.use("/api/auth", authRoutes);
+app.use('/api/users', userRoutes);
 
 
 // Default route

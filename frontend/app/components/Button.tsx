@@ -9,7 +9,8 @@ type ButtonProps = {
     outline?: boolean
     height?: string,
     styles?: string,
-    type?:'submit'
+    type?: 'submit',
+    className?: string
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,7 +21,8 @@ const Button: React.FC<ButtonProps> = ({
                                            icon,
                                            outline,
                                            height,
-                                           styles
+                                           styles,
+                                           className,
                                        }) => {
     return (
         <button
@@ -29,6 +31,7 @@ const Button: React.FC<ButtonProps> = ({
             type={type}
             className={
                 `
+                ${className}
                 flex 
                 items-center
                 justify-center

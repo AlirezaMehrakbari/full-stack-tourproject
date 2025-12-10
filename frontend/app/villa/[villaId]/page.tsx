@@ -33,7 +33,6 @@ const VillaDetailPage = ({params}: VillaDetailPageProps) => {
         step.resetStep()
     }, [])
 
-
     if (isLoading) return <Loading/>;
     if (isError) return <p>Something went wrong!</p>;
     if (!data) return <p>Not Found!</p>;

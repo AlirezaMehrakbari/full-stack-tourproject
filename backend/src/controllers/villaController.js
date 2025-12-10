@@ -1,6 +1,6 @@
 import Villa from "../models/Villa.js";
 import User from "../models/User.js";
-
+import mongoose from "mongoose";
 
 const ensureAllFields = (villaDoc) => {
     const villa = villaDoc.toObject();
@@ -11,19 +11,31 @@ const ensureAllFields = (villaDoc) => {
         area: null,
         suitableFor: [],
         numRooms: null,
+        numBeds: null,
+        numBathrooms: null,
         floor: null,
         constructionYear: null,
         capacity: null,
+        pricePerNight: null,
         pricePerPerson: null,
-        ownerName: "",
-        ownerDescription: "",
+        owner: {
+            userId: null,
+            name: "",
+            phone: "",
+            description: ""
+        },
         images: [],
+        coverImage: "",
         facilities: [],
         reviews: [],
         avgRating: 0,
         numReviews: 0,
         bookedDates: [],
-        rules: []
+        rules: [],
+        cancellationPolicy: "",
+        availability: true,
+        featured: false,
+        status: "active"
     };
 
     for (const [key, val] of Object.entries(defaults)) {
@@ -53,15 +65,15 @@ export const getAllVillas = async (req, res) => {
             if (req.query.maxCapacity) filter.capacity.$lte = Number(req.query.maxCapacity);
         }
 
-        if (req.query.minRating) filter.avgRating = { $gte: Number(req.query.minRating) };
+        if (req.query.minRating) filter.avgRating = {$gte: Number(req.query.minRating)};
 
         const villas = await Villa.find(filter)
             .select("id title city province pricePerNight capacity avgRating numReviews images numRooms area")
-            .sort({ id: 1 });
+            .sort({id: 1});
 
         res.status(200).json(villas);
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({message: "Server error"});
     }
 };
 
@@ -69,47 +81,250 @@ export const getAllVillas = async (req, res) => {
 export const getVillaById = async (req, res) => {
     try {
         const villaId = Number(req.params.id);
-        const villa = await Villa.findOne({ id: villaId });
+        const villa = await Villa.findOne({id: villaId});
 
-        if (!villa) return res.status(404).json({ message: "Villa not found" });
+        if (!villa) return res.status(404).json({message: "Villa not found"});
 
         const formatted = ensureAllFields(villa);
 
         res.status(200).json(formatted);
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({message: "Server error"});
     }
 };
 
 
 export const createVilla = async (req, res) => {
     try {
-        const data = { ...req.body };
-        delete data._id;
-        delete data.id;
+        const {
+            title,
+            description,
+            pricePerNight,
+            pricePerPerson,
+            capacity,
+            numRooms,
+            numBeds,
+            numBathrooms,
+            suitableFor,
+            constructionYear,
+            floor,
+            area,
+            province,
+            city,
+            address,
+            facilities,
+            rules,
+            images,
+            coverImage,
+            cancellationPolicy
+        } = req.body;
 
-        const villa = new Villa(data);
+        if (!title || !province || !city || !pricePerNight || !capacity) {
+            return res.status(400).json({
+                success: false,
+                message: 'لطفاً تمام فیلدهای ضروری را پر کنید (عنوان، استان، شهر، قیمت، ظرفیت)'
+            });
+        }
+
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({
+                success: false,
+                message: 'لطفاً ابتدا وارد شوید'
+            });
+        }
+
+        const owner = await User.findById(req.user.id);
+
+        if (!owner) {
+            return res.status(404).json({
+                success: false,
+                message: 'کاربر یافت نشد'
+            });
+        }
+
+        if (!owner.firstName || !owner.lastName) {
+            return res.status(400).json({
+                success: false,
+                message: 'لطفاً ابتدا نام و نام خانوادگی خود را در پروفایل تکمیل کنید'
+            });
+        }
+
+        const lastVilla = await Villa.findOne().sort({id: -1});
+        const newId = lastVilla ? lastVilla.id + 1 : 1;
+
+        const ownerData = {
+            userId: owner._id,
+            name: `${owner.firstName} ${owner.lastName}`,
+            phone: owner.phoneNumber,
+            description: owner.description || 'مالک ویلا'
+        };
+
+        const villa = new Villa({
+            id: newId,
+            title: title.trim(),
+            description: description?.trim() || "",
+            pricePerNight: Number(pricePerNight),
+            pricePerPerson: Number(pricePerPerson) || null,
+            capacity: Number(capacity),
+            numRooms: numRooms ? Number(numRooms) : null,
+            numBeds: numBeds ? Number(numBeds) : null,
+            numBathrooms: numBathrooms ? Number(numBathrooms) : null,
+            suitableFor: suitableFor || 'همه',
+            constructionYear: constructionYear ? Number(constructionYear) : null,
+            floor: floor ? Number(floor) : null,
+            area: area ? Number(area) : null,
+            province: province.trim(),
+            city: city.trim(),
+            address: address?.trim() || "",
+            facilities: facilities || [],
+            rules: rules || [],
+            images: images || [],
+            coverImage: coverImage || "",
+            cancellationPolicy: cancellationPolicy || 'لغو رزرو تا 7 روز قبل از تاریخ ورود، بدون جریمه',
+            owner: ownerData,
+            rating: {
+                average: 0,
+                count: 0
+            },
+            reviews: [],
+            bookedDates: [],
+            availability: true,
+            featured: false,
+            status: 'active'
+        });
 
         await villa.save();
+
+        console.log('✅ Villa created successfully:', villa.id);
 
         res.status(201).json({
             message: "Villa created successfully",
             villa
         });
     } catch (error) {
-        console.error("Error creating villa:", error);
-        res.status(500).json({ message: "Server error" });
+        console.error('❌ Error creating villa:', error);
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
+        });
+    }
+};
+
+export const getMyVillas = async (req, res) => {
+    try {
+        const villas = await Villa.find({'owner.userId': req.user.id})
+            .sort({createdAt: -1});
+
+        res.status(200).json({
+            success: true,
+            count: villas.length,
+            villas
+        });
+    } catch (error) {
+        console.error('Get my villas error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'خطا در دریافت ویلاهای شما'
+        });
     }
 };
 
 
+export const updateVilla = async (req, res) => {
+    try {
+        const villaId = Number(req.params.id);
+        let villa = await Villa.findOne({id: villaId});
+
+        if (!villa) {
+            return res.status(404).json({
+                success: false,
+                message: 'ویلا یافت نشد'
+            });
+        }
+
+        if (villa.owner.userId.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'شما مجاز به ویرایش این ویلا نیستید'
+            });
+        }
+
+        const owner = await User.findById(req.user.id);
+        if (owner && owner.firstName && owner.lastName) {
+            req.body.owner = {
+                userId: owner._id,
+                name: `${owner.firstName} ${owner.lastName}`,
+                phone: owner.phoneNumber,
+                description: owner.description || villa.owner.description
+            };
+        }
+
+        villa = await Villa.findOneAndUpdate(
+            {id: villaId},
+            {$set: req.body},
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'ویلا با موفقیت به‌روزرسانی شد',
+            villa
+        });
+    } catch (error) {
+        console.error('Update villa error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'خطا در به‌روزرسانی ویلا',
+            error: error.message
+        });
+    }
+};
+
+
+export const deleteVilla = async (req, res) => {
+    try {
+        const villaId = Number(req.params.id);
+        const villa = await Villa.findOne({id: villaId});
+
+        if (!villa) {
+            return res.status(404).json({
+                success: false,
+                message: 'ویلا یافت نشد'
+            });
+        }
+
+        if (villa.owner.userId.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'شما مجاز به حذف این ویلا نیستید'
+            });
+        }
+
+        await Villa.deleteOne({id: villaId});
+
+        res.status(200).json({
+            success: true,
+            message: 'ویلا با موفقیت حذف شد'
+        });
+    } catch (error) {
+        console.error('Delete villa error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'خطا در حذف ویلا'
+        });
+    }
+};
+
 
 export const addReview = async (req, res) => {
     try {
-        const { user, username, rating, comment } = req.body;
+        const {user, username, rating, comment} = req.body;
 
-        const villa = await Villa.findOne({ id: Number(req.params.id) });
-        if (!villa) return res.status(404).json({ message: "Villa not found" });
+        const villa = await Villa.findOne({id: Number(req.params.id)});
+        if (!villa) return res.status(404).json({message: "Villa not found"});
 
         const newReview = {
             user,
@@ -135,81 +350,96 @@ export const addReview = async (req, res) => {
             review: newReview
         });
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({message: "Server error"});
     }
 };
+
 
 export const bookVilla = async (req, res) => {
     try {
-        const { from, to, user } = req.body;
+        const { from, to } = req.body;
+
+        const userId = req.user.id;
+
+        if (!userId) {
+            return res.status(401).json({ message: "کاربر احراز هویت نشده است" });
+        }
 
         const villa = await Villa.findOne({ id: Number(req.params.id) });
-        if (!villa) return res.status(404).json({ message: "Villa not found" });
+        if (!villa) {
+            return res.status(404).json({ message: "Villa not found" });
+        }
 
-        villa.bookedDates.push({ from, to, user });
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+
+        if (fromDate >= toDate) {
+            return res.status(400).json({
+                message: "تاریخ پایان باید بعد از تاریخ شروع باشد"
+            });
+        }
+
+        villa.bookedDates.push({
+            from: fromDate,
+            to: toDate,
+            user: new mongoose.Types.ObjectId(userId)
+        });
 
         await villa.save();
 
-        res.json({ message: "Villa booked successfully" });
+        res.json({
+            message: "Villa booked successfully",
+            booking: {
+                from: fromDate,
+                to: toDate,
+                villa: villa.title
+            }
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        console.error('❌ Book Villa Error:', error);
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
+        });
     }
 };
+
 
 
 export const replyToReview = async (req, res) => {
     try {
-        const villa = await Villa.findOne({ id: Number(req.params.villaId) });
-        if (!villa) return res.status(404).json({ message: "Villa not found" });
+        const villa = await Villa.findOne({id: Number(req.params.villaId)});
+        if (!villa) return res.status(404).json({message: "Villa not found"});
 
         const review = villa.reviews.id(req.params.reviewId);
-        if (!review) return res.status(404).json({ message: "Review not found" });
+        if (!review) return res.status(404).json({message: "Review not found"});
 
         review.reply = req.body.reply;
 
         await villa.save();
 
-        res.json({ message: "Reply added successfully", review });
+        res.json({message: "Reply added successfully", review});
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({message: "Server error"});
     }
 };
-
-function calculateNights(from, to) {
-    const start = new Date(from);
-    const end = new Date(to);
-    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-}
 
 
 export const getLastUserReservation = async (req, res) => {
     try {
-        console.log('\n=== GET LAST RESERVATION ===');
-        console.log('User ID:', req.user?.id);
-
         if (!req.user || !req.user.id) {
             return res.status(401).json({ message: "Unauthorized - no user" });
         }
 
         const userId = req.user.id;
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(401).json({ message: "Unauthorized - user not found" });
-        }
-
-
         const villas = await Villa.find({
             'bookedDates.user': userId
         });
 
-        console.log('Villas found:', villas.length);
-
         if (!villas || villas.length === 0) {
-            return res.json({
-                message: "No reservations found",
-                reservation: null
-            });
+            return res.json(null);
         }
 
         let lastReservation = null;
@@ -217,11 +447,12 @@ export const getLastUserReservation = async (req, res) => {
 
         for (const villa of villas) {
             const userBookings = villa.bookedDates.filter(
-                booking => booking.user === userId
+                booking => booking.user?.toString() === userId.toString()
             );
 
             for (const booking of userBookings) {
                 const bookingDate = new Date(booking.from);
+
                 if (!lastReservation || bookingDate > new Date(lastReservation.from)) {
                     lastReservation = booking;
                     lastVilla = villa;
@@ -230,17 +461,33 @@ export const getLastUserReservation = async (req, res) => {
         }
 
         if (!lastReservation) {
-            return res.json({
-                message: "No reservations found",
-                reservation: null
-            });
+            return res.json(null);
         }
 
-        const fromDate = new Date(lastReservation.from);
-        const toDate = new Date(lastReservation.to);
-        const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
+        const fromDateOriginal = lastReservation.from; // Already a Date object
+        const toDateOriginal = lastReservation.to;     // Already a Date object
 
-        console.log('✅ Last reservation found');
+        // --- شروع دیباگ و اصلاح nights ---
+        console.log('DEBUG: getLastUserReservation - Booking Dates:', {
+            from: fromDateOriginal,
+            to: toDateOriginal
+        });
+
+        const rawTimeDiffMs = toDateOriginal.getTime() - fromDateOriginal.getTime();
+        console.log('DEBUG: getLastUserReservation - Raw Time Difference (ms):', rawTimeDiffMs);
+        const msPerDay = (1000 * 60 * 60 * 24);
+        console.log('DEBUG: getLastUserReservation - Milliseconds Per Day:', msPerDay);
+        const rawDaysDiff = rawTimeDiffMs / msPerDay;
+        console.log('DEBUG: getLastUserReservation - Raw Days Difference:', rawDaysDiff);
+
+        let nights = Math.ceil(rawDaysDiff);
+
+        // ★ اصلاح اصلی: اگر تفاوت زمانی مثبت است ولی تعداد شب‌ها صفر محاسبه شد، آن را 1 در نظر بگیر
+        if (nights === 0 && rawTimeDiffMs > 0) {
+            nights = 1;
+            console.warn('DEBUG: getLastUserReservation - Forcing nights to 1. Original calculation was 0 for a positive duration.');
+        }
+        // --- پایان دیباگ و اصلاح nights ---
 
         res.json({
             title: lastVilla.title,
@@ -250,13 +497,13 @@ export const getLastUserReservation = async (req, res) => {
             to: lastReservation.to,
             pricePerNight: lastVilla.pricePerNight,
             capacity: lastVilla.capacity,
-            nights: nights,
+            nights: nights, // ★ اصلاح شده
             totalPrice: lastVilla.pricePerNight * nights,
             imageUrl: lastVilla.images[0] || '/default-villa.jpg'
         });
 
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('❌ Error in getLastUserReservation:', error);
         res.status(500).json({
             message: "Server error",
             error: error.message
@@ -264,10 +511,9 @@ export const getLastUserReservation = async (req, res) => {
     }
 };
 
+
 export const getUserReservations = async (req, res) => {
     try {
-        console.log('=== getUserReservations START ===');
-
         if (!req.user || !req.user.id) {
             return res.status(401).json({
                 message: "Unauthorized - user not found"
@@ -275,7 +521,6 @@ export const getUserReservations = async (req, res) => {
         }
 
         const userId = req.user.id;
-        console.log('User ID:', userId);
 
         const userExists = await User.findById(userId);
         if (!userExists) {
@@ -284,25 +529,42 @@ export const getUserReservations = async (req, res) => {
             });
         }
 
-        console.log('✅ User found:', userExists.email);
-
         const villas = await Villa.find({
             'bookedDates.user': userId
         });
-
-        console.log('Villas with reservations:', villas.length);
 
         const allReservations = [];
 
         villas.forEach(villa => {
             const userBookings = villa.bookedDates.filter(
-                booking => booking.user === userId
+                booking => booking.user?.toString() === userId.toString()
             );
 
             userBookings.forEach(booking => {
-                const fromDate = new Date(booking.from);
-                const toDate = new Date(booking.to);
-                const nights = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
+                const fromDateOriginal = booking.from;
+                const toDateOriginal = booking.to;
+
+                // --- شروع دیباگ و اصلاح nights ---
+                console.log('DEBUG: getUserReservations - Booking Dates:', {
+                    from: fromDateOriginal,
+                    to: toDateOriginal
+                });
+
+                const rawTimeDiffMs = toDateOriginal.getTime() - fromDateOriginal.getTime();
+                console.log('DEBUG: getUserReservations - Raw Time Difference (ms):', rawTimeDiffMs);
+                const msPerDay = (1000 * 60 * 60 * 24);
+                console.log('DEBUG: getUserReservations - Milliseconds Per Day:', msPerDay);
+                const rawDaysDiff = rawTimeDiffMs / msPerDay;
+                console.log('DEBUG: getUserReservations - Raw Days Difference:', rawDaysDiff);
+
+                let nights = Math.ceil(rawDaysDiff);
+
+                // ★ اصلاح اصلی: اگر تفاوت زمانی مثبت است ولی تعداد شب‌ها صفر محاسبه شد، آن را 1 در نظر بگیر
+                if (nights === 0 && rawTimeDiffMs > 0) {
+                    nights = 1;
+                    console.warn('DEBUG: getUserReservations - Forcing nights to 1. Original calculation was 0 for a positive duration.');
+                }
+                // --- پایان دیباگ و اصلاح nights ---
 
                 allReservations.push({
                     _id: booking._id,
@@ -313,24 +575,19 @@ export const getUserReservations = async (req, res) => {
                     to: booking.to,
                     pricePerNight: villa.pricePerNight,
                     capacity: villa.capacity,
-                    nights: nights,
+                    nights: nights, // ★ اصلاح شده
                     totalPrice: villa.pricePerNight * nights,
                     imageUrl: villa.images[0] || '/default-villa.jpg'
                 });
             });
         });
 
-        allReservations.sort((a, b) =>
-            new Date(b.from) - new Date(a.from)
-        );
-
-        console.log('Total reservations:', allReservations.length);
-        console.log('=== getUserReservations END ===');
+        allReservations.sort((a, b) => new Date(b.from) - new Date(a.from));
 
         res.status(200).json(allReservations);
 
     } catch (error) {
-        console.error('=== ERROR ===');
+        console.error('=== ERROR in getUserReservations ===');
         console.error(error);
         res.status(500).json({
             message: "Server error",
@@ -339,45 +596,85 @@ export const getUserReservations = async (req, res) => {
     }
 };
 
+
 export const toggleFavorite = async (req, res) => {
     try {
+        console.log('=== Toggle Favorite Debug ===');
+        console.log('User ID:', req.user?.id);
+        console.log('Villa ID:', req.params.id);
+
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({message: 'کاربر احراز هویت نشده است'});
+        }
+
+        const userId = req.user.id;
         const villaId = Number(req.params.id);
 
-        const villa = await Villa.findOne({ id: villaId });
+        if (isNaN(villaId)) {
+            return res.status(400).json({message: 'شناسه ویلا باید عدد باشد'});
+        }
+
+        const villa = await Villa.findOne({id: villaId});
+
         if (!villa) {
-            return res.status(404).json({ message: "Villa not found" });
+            console.error('Villa not found with ID:', villaId);
+            return res.status(404).json({message: 'ویلا یافت نشد'});
         }
 
-        const user = await User.findById(req.user.id);
+        console.log('Villa found:', villa.id);
+
+        const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({message: 'کاربر یافت نشد'});
         }
 
-        const index = user.favorites.indexOf(villaId);
+        console.log('Current favorites:', user.favorites);
 
-        if (index > -1) {
-            user.favorites.splice(index, 1);
-            await user.save();
+        const numericVillaId = villa.id;
 
-            return res.json({
-                message: "Removed from favorites",
-                favorites: user.favorites,
-                action: "removed"
-            });
+        const isFavorite = user.favorites.includes(numericVillaId);
+
+        console.log('Is favorite:', isFavorite);
+
+        let updatedUser;
+        if (isFavorite) {
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                {
+                    $pull: {favorites: numericVillaId},
+                    $currentDate: {updatedAt: true}
+                },
+                {new: true, runValidators: true}
+            );
+            console.log('Removed from favorites');
         } else {
-            user.favorites.push(villaId);
-            await user.save();
-
-            return res.json({
-                message: "Added to favorites",
-                favorites: user.favorites,
-                action: "added"
-            });
+            updatedUser = await User.findByIdAndUpdate(
+                userId,
+                {
+                    $addToSet: {favorites: numericVillaId},
+                    $currentDate: {updatedAt: true}
+                },
+                {new: true, runValidators: true}
+            );
+            console.log('Added to favorites');
         }
 
-    } catch (err) {
-        console.error("toggleFavorite ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        console.log('Updated favorites:', updatedUser.favorites);
+        console.log('=== End Debug ===');
+
+        res.json({
+            message: isFavorite ? 'ویلا از علاقه‌مندی‌ها حذف شد' : 'ویلا به علاقه‌مندی‌ها اضافه شد',
+            sFavorite: !isFavorite,
+            favorites: updatedUser.favorites
+        });
+
+    } catch (error) {
+        console.error('❌ Toggle Favorite Error:', error);
+        console.error('Error stack:', error.stack);
+        res.status(500).json({
+            message: 'خطا در سرور',
+            error: error.message
+        });
     }
 };
 
@@ -387,15 +684,14 @@ export const getFavorites = async (req, res) => {
         const user = await User.findById(req.user.id);
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({message: "User not found"});
         }
 
-        const villas = await Villa.find({ id: { $in: user.favorites } });
+        const villas = await Villa.find({id: {$in: user.favorites}});
 
         res.json(villas);
     } catch (err) {
         console.error("getFavorites ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({message: "Server error"});
     }
 };
-

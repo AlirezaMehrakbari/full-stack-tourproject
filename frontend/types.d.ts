@@ -99,7 +99,7 @@ type VillaDetails = {
     layer: string,
     pricePerNight: string,
     pricePerAdditionalPerson: string,
-    rules: string,
+    rules: string[],
     deleted_at: string | null,
     created_at: string,
     updated_at: string,

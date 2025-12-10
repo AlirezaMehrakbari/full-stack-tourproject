@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useAppSelector} from "@/app/redux/store";
 import {tripTourApi} from "@/axios-instances";
 import {toast} from "react-toastify";
+import FormatCurrency from "@/app/utils/FormatCurrency";
 
 
 export type VillaItemProps = {
@@ -75,25 +76,25 @@ const VillaItem: React.FC<VillaItemProps> = ({
 
             </div>
             <Link href={`/villa/${id}`}>
-                <div className="flex flex-row justify-between py-2 px-[2.98px]">
-                    <div className="flex text-[16.5px]">
-                        <p>{opinion}</p>
-                        <p className="px-1">دیدگاه</p>
-                    </div>
-                    <div className="flex flex-row items-center">
-                        <p className="text-[16.5px] px-1">
-                            {Satisfaction}
-                        </p>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
-                            <path
-                                d="M8.5 1L10.8175 5.93691L16 6.73344L12.25 10.5741L13.135 16L8.5 13.4369L3.865 16L4.75 10.5741L1 6.73344L6.1825 5.93691L8.5 1Z"
-                                fill="#FFF500" stroke="#FFF500" strokeWidth="2" strokeLinecap="round"
-                                strokeLinejoin="round"/>
-                        </svg>
-                    </div>
+                {/*<div className="flex flex-row justify-between py-2 px-[2.98px]">*/}
+                {/*    <div className="flex text-[16.5px]">*/}
+                {/*        <p>{opinion}</p>*/}
+                {/*        <p className="px-1">دیدگاه</p>*/}
+                {/*    </div>*/}
+                {/*    <div className="flex flex-row items-center">*/}
+                {/*        <p className="text-[16.5px] px-1">*/}
+                {/*            {Satisfaction}*/}
+                {/*        </p>*/}
+                {/*        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">*/}
+                {/*            <path*/}
+                {/*                d="M8.5 1L10.8175 5.93691L16 6.73344L12.25 10.5741L13.135 16L8.5 13.4369L3.865 16L4.75 10.5741L1 6.73344L6.1825 5.93691L8.5 1Z"*/}
+                {/*                fill="#FFF500" stroke="#FFF500" strokeWidth="2" strokeLinecap="round"*/}
+                {/*                strokeLinejoin="round"/>*/}
+                {/*        </svg>*/}
+                {/*    </div>*/}
 
-                </div>
-                <h1 className='font-kalameh500 text-[23px] text-[#000]'>{title} </h1>
+                {/*</div>*/}
+                <h1 className='font-kalameh500 text-[23px] text-[#000] pt-2'>{title} </h1>
                 <div
                     className="flex flex-row py-2 px-[2.98px] text-[#706E6E] group-hover:text-[#000] group-hover:font-kalameh500">
                     <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
@@ -122,7 +123,7 @@ const VillaItem: React.FC<VillaItemProps> = ({
                     </div>
 
                     <div className="flex flex-row">
-                        <p className="text-[14px] font-kalameh400 text-[#706E6E] group-hover:text-[#000] group-hover:font-kalameh500">{price} تومان</p>
+                        <p className="text-[14px] font-kalameh400 text-[#706E6E] group-hover:text-[#000] group-hover:font-kalameh500">{FormatCurrency(+price)} تومان</p>
                     </div>
                 </div>
             </Link>
