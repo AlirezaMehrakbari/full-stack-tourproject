@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
     FiHome,
     FiMapPin,
@@ -12,12 +11,14 @@ import {
     FiImage,
     FiList,
     FiAlertCircle,
-    FiCheckCircle
+    FiCheckCircle,
+    FiX,
+    FiPlus
 } from 'react-icons/fi';
-import {tripTourApi} from "@/axios-instances";
+import Button from "@/app/components/Button";
+import {useCreateVilla, useProfile, useUpdateVilla, useVillaDetails} from "@/app/components/admin/_hooks/useVillas";
 
-// Types
-interface VillaFormData {
+export interface VillaFormData {
     title: string;
     description: string;
     pricePerNight: number;
@@ -37,49 +38,18 @@ interface VillaFormData {
     cancellationPolicy: string;
 }
 
-interface User {
-    firstName: string;
-    lastName: string;
-    phoneNumber: string;
-    description: string;
-}
 
-// Custom Hooks
-const useProfile = () => {
-    return useQuery({
-        queryKey: ['userProfile'],
-        queryFn: async () => {
-            const response = await tripTourApi.get('/users/profile');
-            return response.data.user as User;
-        }
-    });
-};
 
-const useCreateVilla = () => {
-    const router = useRouter();
 
-    return useMutation({
-        mutationFn: async (data: VillaFormData) => {
-            const response = await tripTourApi.post('/villas', data);
-            return response.data;
-        },
-        onSuccess: () => {
-            toast.success('ویلا با موفقیت ایجاد شد! 🎉');
-            setTimeout(() => {
-                router.push('/owner/my-villas');
-            }, 2000);
-        },
-        onError: (error: any) => {
-            const message = error.response?.data?.message || 'خطا در ایجاد ویلا';
-            toast.error(message);
-        }
-    });
-};
+const VillaForm = () => {
+    const searchParams = useSearchParams();
+    const villaId = searchParams?.get("id") as string | undefined;
+    const isEditMode = !!villaId;
 
-// Main Component
-const CreateVillaPage = () => {
     const { data: user, isLoading: isLoadingProfile } = useProfile();
+    const { data: villaData, isLoading: isLoadingVilla, error: villaError } = useVillaDetails(villaId || null);
     const { mutate: createVilla, isPending: isCreating } = useCreateVilla();
+    const { mutate: updateVilla, isPending: isUpdating } = useUpdateVilla(villaId || '');
 
     const [formData, setFormData] = useState<VillaFormData>({
         title: '',
@@ -105,7 +75,31 @@ const CreateVillaPage = () => {
     const [newRule, setNewRule] = useState('');
     const [newImage, setNewImage] = useState('');
 
-    // مدیریت تغییرات Input
+    // پر کردن فرم در حالت ویرایش
+    useEffect(() => {
+        if (isEditMode && villaData) {
+            setFormData({
+                title: villaData.title || '',
+                description: villaData.description || '',
+                pricePerNight: villaData.pricePerNight || 0,
+                capacity: villaData.capacity || 1,
+                province: villaData.province || '',
+                city: villaData.city || '',
+                address: villaData.address || '',
+                numRooms: villaData.numRooms || 1,
+                numBeds: villaData.numBeds || 1,
+                numBathrooms: villaData.numBathrooms || 1,
+                area: villaData.area || 0,
+                facilities: villaData.facilities || [],
+                rules: villaData.rules || [],
+                suitableFor: villaData.suitableFor || 'همه',
+                images: villaData.images || [],
+                coverImage: villaData.coverImage || '',
+                cancellationPolicy: villaData.cancellationPolicy || 'لغو رزرو تا 7 روز قبل از تاریخ ورود، بدون جریمه'
+            });
+        }
+    }, [isEditMode, villaData]);
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
@@ -180,11 +174,9 @@ const CreateVillaPage = () => {
         }));
     };
 
-    // ارسال فرم
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // اعتبارسنجی
         if (!user?.firstName || !user?.lastName) {
             toast.error('لطفاً ابتدا نام و نام خانوادگی خود را در پروفایل تکمیل کنید');
             return;
@@ -200,11 +192,14 @@ const CreateVillaPage = () => {
             return;
         }
 
-        createVilla(formData);
+        if (isEditMode) {
+            updateVilla(formData);
+        } else {
+            createVilla(formData);
+        }
     };
 
-    // نمایش Loading
-    if (isLoadingProfile) {
+    if (isLoadingProfile || (isEditMode && isLoadingVilla)) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
                 <div className="text-center">
@@ -215,11 +210,30 @@ const CreateVillaPage = () => {
         );
     }
 
-    // استایل‌های مشترک
+    if (isEditMode && villaError) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+                <div className="bg-red-50 border-2 border-red-500 rounded-xl p-8 max-w-md text-center">
+                    <FiAlertCircle className="text-red-500 text-6xl mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-red-800 mb-2">خطا در بارگذاری ویلا</h2>
+                    <p className="text-red-600 mb-4">ویلا یافت نشد یا شما دسترسی ندارید.</p>
+                    <Button
+                        onClick={() => window.history.back()}
+                        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        بازگشت
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     const inputClass = "w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all";
     const textareaClass = "w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all resize-none";
     const selectClass = "w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all cursor-pointer";
     const labelClass = "flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2";
+
+    const isSubmitting = isCreating || isUpdating;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
@@ -229,10 +243,13 @@ const CreateVillaPage = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                                🏡 افزودن ویلای جدید
+                                {isEditMode ? '✏️ ویرایش ویلا' : '🏡 افزودن ویلای جدید'}
                             </h1>
                             <p className="text-gray-600">
-                                ویلای خود را معرفی کنید و به گردشگران اجاره دهید
+                                {isEditMode
+                                    ? 'ویرایش اطلاعات ویلا'
+                                    : 'ویلای خود را معرفی کنید و به گردشگران اجاره دهید'
+                                }
                             </p>
                         </div>
                         <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4 rounded-xl text-center">
@@ -244,7 +261,6 @@ const CreateVillaPage = () => {
                     </div>
                 </div>
 
-                {/* فرم */}
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* اطلاعات اصلی */}
                     <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -254,7 +270,6 @@ const CreateVillaPage = () => {
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* عنوان */}
                             <div className="md:col-span-2">
                                 <label className={labelClass}>
                                     <FiHome />
@@ -271,7 +286,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* توضیحات */}
                             <div className="md:col-span-2">
                                 <label className={labelClass}>
                                     <FiList />
@@ -298,7 +312,6 @@ const CreateVillaPage = () => {
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* استان */}
                             <div>
                                 <label className={labelClass}>
                                     <FiMapPin />
@@ -315,7 +328,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* شهر */}
                             <div>
                                 <label className={labelClass}>
                                     <FiMapPin />
@@ -332,7 +344,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* آدرس */}
                             <div className="md:col-span-2">
                                 <label className={labelClass}>
                                     <FiMapPin />
@@ -359,7 +370,6 @@ const CreateVillaPage = () => {
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {/* قیمت */}
                             <div>
                                 <label className={labelClass}>
                                     <FiDollarSign />
@@ -377,7 +387,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* ظرفیت */}
                             <div>
                                 <label className={labelClass}>
                                     <FiUsers />
@@ -395,7 +404,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* مناسب برای */}
                             <div>
                                 <label className={labelClass}>
                                     <FiUsers />
@@ -414,7 +422,6 @@ const CreateVillaPage = () => {
                                 </select>
                             </div>
 
-                            {/* تعداد اتاق */}
                             <div>
                                 <label className={labelClass}>
                                     🛏️ تعداد اتاق خواب
@@ -430,7 +437,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* تعداد تخت */}
                             <div>
                                 <label className={labelClass}>
                                     🛏️ تعداد تخت
@@ -446,7 +452,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* تعداد سرویس */}
                             <div>
                                 <label className={labelClass}>
                                     🚿 تعداد سرویس بهداشتی
@@ -462,7 +467,6 @@ const CreateVillaPage = () => {
                                 />
                             </div>
 
-                            {/* متراژ */}
                             <div className="md:col-span-2 lg:col-span-3">
                                 <label className={labelClass}>
                                     📏 متراژ (متر مربع)
@@ -483,8 +487,7 @@ const CreateVillaPage = () => {
                     {/* امکانات */}
                     <div className="bg-white rounded-2xl shadow-xl p-8">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b-2 border-cyan-500 flex items-center gap-2">
-                            <FiCheckCircle className="text-cyan-600" />
-                            امکانات
+                            ✨ امکانات
                         </h2>
 
                         <div className="space-y-4">
@@ -493,44 +496,46 @@ const CreateVillaPage = () => {
                                     type="text"
                                     value={newFacility}
                                     onChange={(e) => setNewFacility(e.target.value)}
-                                    className={inputClass}
-                                    placeholder="مثال: استخر اختصاصی"
                                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFacility())}
+                                    className={inputClass}
+                                    placeholder="مثال: استخر، جکوزی، باربیکیو"
                                 />
-                                <button
+                                <Button
                                     type="button"
                                     onClick={addFacility}
-                                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 font-semibold transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-xl hover:from-cyan-600 hover:to-cyan-700 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap"
                                 >
-                                    + افزودن
-                                </button>
+                                    <FiPlus />
+                                    افزودن
+                                </Button>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                                {formData.facilities.map((facility, index) => (
-                                    <span
-                                        key={index}
-                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-blue-100 text-blue-800 font-medium shadow-sm"
-                                    >
-                                        ✓ {facility}
-                                        <button
-                                            type="button"
-                                            onClick={() => removeFacility(index)}
-                                            className="text-blue-600 hover:text-blue-800 font-bold text-lg"
+                            {formData.facilities.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                    {formData.facilities.map((facility, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-100 text-cyan-800 rounded-full font-medium"
                                         >
-                                            ×
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
+                                            ✓ {facility}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeFacility(index)}
+                                                className="text-cyan-600 hover:text-cyan-800 transition-colors"
+                                            >
+                                                <FiX />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* قوانین */}
                     <div className="bg-white rounded-2xl shadow-xl p-8">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b-2 border-orange-500 flex items-center gap-2">
-                            <FiAlertCircle className="text-orange-600" />
-                            قوانین و مقررات
+                            📋 قوانین و مقررات
                         </h2>
 
                         <div className="space-y-4">
@@ -539,36 +544,39 @@ const CreateVillaPage = () => {
                                     type="text"
                                     value={newRule}
                                     onChange={(e) => setNewRule(e.target.value)}
-                                    className={inputClass}
-                                    placeholder="مثال: ممنوعیت نگهداری حیوانات خانگی"
                                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRule())}
+                                    className={inputClass}
+                                    placeholder="مثال: عدم نگهداری حیوانات خانگی"
                                 />
-                                <button
+                                <Button
                                     type="button"
                                     onClick={addRule}
-                                    className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 font-semibold transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                                    className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap"
                                 >
-                                    + افزودن
-                                </button>
+                                    <FiPlus />
+                                    افزودن
+                                </Button>
                             </div>
 
-                            <div className="flex flex-wrap gap-2">
-                                {formData.rules.map((rule, index) => (
-                                    <span
-                                        key={index}
-                                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm bg-orange-100 text-orange-800 font-medium shadow-sm"
-                                    >
-                                        ! {rule}
-                                        <button
-                                            type="button"
-                                            onClick={() => removeRule(index)}
-                                            className="text-orange-600 hover:text-orange-800 font-bold text-lg"
+                            {formData.rules.length > 0 && (
+                                <div className="space-y-2">
+                                    {formData.rules.map((rule, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-200"
                                         >
-                                            ×
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
+                                            <span className="text-gray-700">• {rule}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeRule(index)}
+                                                className="text-orange-600 hover:text-orange-800 transition-colors"
+                                            >
+                                                <FiX size={20} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -579,99 +587,110 @@ const CreateVillaPage = () => {
                             تصاویر
                         </h2>
 
-                        {/* تصویر کاور */}
-                        <div className="mb-6">
-                            <label className={labelClass}>
-                                🖼️ تصویر کاور (لینک)
-                            </label>
-                            <input
-                                type="url"
-                                name="coverImage"
-                                value={formData.coverImage}
-                                onChange={handleInputChange}
-                                className={inputClass}
-                                placeholder="https://example.com/image.jpg"
-                            />
-                        </div>
-
-                        {/* سایر تصاویر */}
-                        <div className="space-y-4">
-                            <label className={labelClass}>
-                                📷 سایر تصاویر (لینک)
-                            </label>
-                            <div className="flex gap-2">
+                        <div className="space-y-6">
+                            {/* تصویر کاور */}
+                            <div>
+                                <label className={labelClass}>
+                                    🖼️ تصویر کاور (اصلی)
+                                </label>
                                 <input
-                                    type="url"
-                                    value={newImage}
-                                    onChange={(e) => setNewImage(e.target.value)}
+                                    type="text"
+                                    name="coverImage"
+                                    value={formData.coverImage}
+                                    onChange={handleInputChange}
                                     className={inputClass}
                                     placeholder="https://example.com/image.jpg"
-                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
                                 />
-                                <button
-                                    type="button"
-                                    onClick={addImage}
-                                    className="px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl hover:from-pink-600 hover:to-pink-700 font-semibold transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
-                                >
-                                    + افزودن
-                                </button>
+                                {formData.coverImage && (
+                                    <div className="mt-4">
+                                        <img
+                                            src={formData.coverImage}
+                                            alt="Cover"
+                                            className="w-full h-64 object-cover rounded-xl shadow-lg"
+                                        />
+                                    </div>
+                                )}
                             </div>
 
-                            {/* نمایش تصاویر */}
-                            {formData.images.length > 0 && (
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                                    {formData.images.map((img, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={img}
-                                                alt={`Image ${index + 1}`}
-                                                className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(index)}
-                                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))}
+                            {/* سایر تصاویر */}
+                            <div>
+                                <label className={labelClass}>
+                                    🖼️ سایر تصاویر
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newImage}
+                                        onChange={(e) => setNewImage(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+                                        className={inputClass}
+                                        placeholder="https://example.com/image.jpg"
+                                    />
+                                    <Button
+                                        type="button"
+                                        onClick={addImage}
+                                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap"
+                                    >
+                                        <FiPlus />
+                                        افزودن
+                                    </Button>
                                 </div>
-                            )}
+
+                                {formData.images.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+                                        {formData.images.map((image, index) => (
+                                            <div key={index} className="relative group">
+                                                <img
+                                                    src={image}
+                                                    alt={`Image ${index + 1}`}
+                                                    className="w-full h-32 object-cover rounded-xl shadow-md"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
+                                                >
+                                                    <FiX />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
                     {/* سیاست لغو */}
                     <div className="bg-white rounded-2xl shadow-xl p-8">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b-2 border-red-500">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b-2 border-red-500 flex items-center gap-2">
                             📝 سیاست لغو رزرو
                         </h2>
+
                         <textarea
                             name="cancellationPolicy"
                             value={formData.cancellationPolicy}
                             onChange={handleInputChange}
                             rows={4}
                             className={textareaClass}
-                            placeholder="توضیحات درباره سیاست لغو رزرو..."
+                            placeholder="مثال: لغو رزرو تا 7 روز قبل از تاریخ ورود، بدون جریمه..."
                         />
                     </div>
 
-                    {/* دکمه ثبت */}
                     <div className="bg-white rounded-2xl shadow-xl p-8">
-                        <button
+                        <Button
                             type="submit"
-                            disabled={isCreating}
+                            disabled={isSubmitting}
                             className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 text-white text-xl font-bold rounded-xl hover:from-green-600 hover:to-green-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            {isCreating ? (
+                            {isSubmitting ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
-                                    در حال ایجاد...
+                                    {isEditMode ? 'در حال ویرایش...' : 'در حال ایجاد...'}
                                 </span>
                             ) : (
-                                '✅ ثبت ویلا'
+                                isEditMode ? '✅ ذخیره تغییرات' : '✅ ثبت ویلا'
                             )}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -679,4 +698,4 @@ const CreateVillaPage = () => {
     );
 };
 
-export default CreateVillaPage;
+export default VillaForm;

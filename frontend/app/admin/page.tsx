@@ -1,13 +1,23 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
-import { FiEdit2, FiSave, FiX, FiTrash2, FiUser, FiPhone, FiMail, FiMapPin, FiCalendar, FiCreditCard } from 'react-icons/fi';
+import React, {useState} from 'react';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {toast} from 'react-hot-toast';
+import {
+    FiEdit2,
+    FiSave,
+    FiX,
+    FiTrash2,
+    FiUser,
+    FiPhone,
+    FiMail,
+    FiMapPin,
+    FiCalendar,
+    FiCreditCard
+} from 'react-icons/fi';
 import {tripTourApi} from "@/axios-instances";
 import Button from "@/app/components/Button";
 
-// Types
 interface User {
     _id: string;
     firstName: string;
@@ -23,7 +33,6 @@ interface User {
     createdAt: string;
 }
 
-// Custom Hooks
 const useProfile = () => {
     return useQuery({
         queryKey: ['userProfile'],
@@ -43,7 +52,7 @@ const useUpdateProfile = () => {
             return response.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+            queryClient.invalidateQueries({queryKey: ['userProfile']});
             toast.success('پروفایل با موفقیت به‌روزرسانی شد');
         },
         onError: (error: any) => {
@@ -62,7 +71,7 @@ const useDeleteProfileImage = () => {
             return response.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+            queryClient.invalidateQueries({queryKey: ['userProfile']});
             toast.success('عکس پروفایل حذف شد');
         },
         onError: (error: any) => {
@@ -74,9 +83,9 @@ const useDeleteProfileImage = () => {
 
 // Main Component
 const OwnerProfilePage = () => {
-    const { data: user, isLoading: isPending } = useProfile();
-    const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
-    const { mutate: deleteImage, isPending: isDeleting } = useDeleteProfileImage();
+    const {data: user, isLoading: isPending} = useProfile();
+    const {mutate: updateProfile, isPending: isUpdating} = useUpdateProfile();
+    const {mutate: deleteImage, isPending: isDeleting} = useDeleteProfileImage();
 
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<Partial<User>>({});
@@ -98,7 +107,7 @@ const OwnerProfilePage = () => {
     }, [isEditing, user]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData(prev => ({
             ...prev,
             [name]: value
@@ -131,9 +140,11 @@ const OwnerProfilePage = () => {
 
     if (isPending) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+            <div
+                className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                    <div
+                        className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto mb-4"></div>
                     <p className="text-gray-600 text-lg">در حال بارگذاری...</p>
                 </div>
             </div>
@@ -142,7 +153,8 @@ const OwnerProfilePage = () => {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+            <div
+                className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
                 <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
                     <p className="text-red-600 text-lg mb-4">❌ خطا در بارگذاری اطلاعات</p>
                     <Button
@@ -165,11 +177,9 @@ const OwnerProfilePage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
             <div className="max-w-5xl mx-auto px-4">
-                {/* هدر */}
                 <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-6">
-                            {/* عکس پروفایل */}
                             <div className="relative group">
                                 {user.profileImage ? (
                                     <img
@@ -178,8 +188,9 @@ const OwnerProfilePage = () => {
                                         className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-blue-500 shadow-lg"
                                     />
                                 ) : (
-                                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-white shadow-lg">
-                                        <FiUser className="text-white text-5xl" />
+                                    <div
+                                        className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-white shadow-lg">
+                                        <FiUser className="text-white text-5xl"/>
                                     </div>
                                 )}
                                 {isEditing && user.profileImage && (
@@ -187,44 +198,43 @@ const OwnerProfilePage = () => {
                                         onClick={handleDeleteImage}
                                         disabled={isDeleting}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50"
-                                        title="حذف عکس"
                                     >
-                                        <FiTrash2 className="text-sm" />
+                                        حذف عکس
+                                        <FiTrash2 className="text-sm"/>
                                     </Button>
                                 )}
                             </div>
 
-                            {/* اطلاعات اصلی */}
                             <div>
                                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
                                     {user.firstName} {user.lastName}
                                 </h1>
                                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                                     <span className="flex items-center gap-1">
-                                        <FiPhone className="text-blue-600" />
+                                        <FiPhone className="text-blue-600"/>
                                         {user.phoneNumber}
                                     </span>
                                     {user.email && (
                                         <span className="flex items-center gap-1">
-                                            <FiMail className="text-blue-600" />
+                                            <FiMail className="text-blue-600"/>
                                             {user.email}
                                         </span>
                                     )}
-                                    <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-semibold">
+                                    <span
+                                        className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xs font-semibold">
                                         {user.role === 'owner' ? '🏠 مالک' : '👤 کاربر'}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* دکمه‌های عملیات */}
                         <div className="flex gap-3">
                             {!isEditing ? (
                                 <Button
                                     onClick={() => setIsEditing(true)}
                                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
                                 >
-                                    <FiEdit2 />
+                                    <FiEdit2/>
                                     ویرایش پروفایل
                                 </Button>
                             ) : (
@@ -234,7 +244,7 @@ const OwnerProfilePage = () => {
                                         disabled={isUpdating}
                                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50"
                                     >
-                                        <FiSave />
+                                        <FiSave/>
                                         {isUpdating ? 'در حال ذخیره...' : 'ذخیره'}
                                     </Button>
                                     <Button
@@ -242,7 +252,7 @@ const OwnerProfilePage = () => {
                                         disabled={isUpdating}
                                         className="flex items-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50"
                                     >
-                                        <FiX />
+                                        <FiX/>
                                         انصراف
                                     </Button>
                                 </>
@@ -251,17 +261,15 @@ const OwnerProfilePage = () => {
                     </div>
                 </div>
 
-                {/* فرم اطلاعات */}
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 pb-4 border-b-2 border-gray-200">
                         📋 اطلاعات شخصی
                     </h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* نام */}
                         <div>
                             <label className={labelClass}>
-                                <FiUser className="text-blue-600" />
+                                <FiUser className="text-blue-600"/>
                                 نام *
                             </label>
                             {isEditing ? (
@@ -279,10 +287,9 @@ const OwnerProfilePage = () => {
                             )}
                         </div>
 
-                        {/* نام خانوادگی */}
                         <div>
                             <label className={labelClass}>
-                                <FiUser className="text-blue-600" />
+                                <FiUser className="text-blue-600"/>
                                 نام خانوادگی *
                             </label>
                             {isEditing ? (
@@ -300,10 +307,9 @@ const OwnerProfilePage = () => {
                             )}
                         </div>
 
-                        {/* کد ملی */}
                         <div>
                             <label className={labelClass}>
-                                <FiCreditCard className="text-blue-600" />
+                                <FiCreditCard className="text-blue-600"/>
                                 کد ملی
                             </label>
                             {isEditing ? (
@@ -323,10 +329,9 @@ const OwnerProfilePage = () => {
                             )}
                         </div>
 
-                        {/* تاریخ تولد */}
                         <div>
                             <label className={labelClass}>
-                                <FiCalendar className="text-blue-600" />
+                                <FiCalendar className="text-blue-600"/>
                                 تاریخ تولد
                             </label>
                             {isEditing ? (
@@ -345,10 +350,9 @@ const OwnerProfilePage = () => {
                             )}
                         </div>
 
-                        {/* شهر */}
                         <div>
                             <label className={labelClass}>
-                                <FiMapPin className="text-blue-600" />
+                                <FiMapPin className="text-blue-600"/>
                                 شهر
                             </label>
                             {isEditing ? (
@@ -367,10 +371,9 @@ const OwnerProfilePage = () => {
                             )}
                         </div>
 
-                        {/* ایمیل */}
                         <div>
                             <label className={labelClass}>
-                                <FiMail className="text-blue-600" />
+                                <FiMail className="text-blue-600"/>
                                 ایمیل
                             </label>
                             {isEditing ? (
@@ -390,7 +393,6 @@ const OwnerProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* لینک عکس پروفایل */}
                     {isEditing && (
                         <div className="mt-6">
                             <label className={labelClass}>
@@ -410,7 +412,6 @@ const OwnerProfilePage = () => {
                         </div>
                     )}
 
-                    {/* درباره من */}
                     <div className="mt-6">
                         <label className={labelClass}>
                             ✍️ درباره من
@@ -431,7 +432,6 @@ const OwnerProfilePage = () => {
                         )}
                     </div>
 
-                    {/* اطلاعات سیستمی */}
                     <div className="mt-8 pt-6 border-t-2 border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-700 mb-4">
                             🔐 اطلاعات سیستمی
