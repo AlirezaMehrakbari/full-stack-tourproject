@@ -467,7 +467,6 @@ export const getLastUserReservation = async (req, res) => {
         const fromDateOriginal = lastReservation.from; // Already a Date object
         const toDateOriginal = lastReservation.to;     // Already a Date object
 
-        // --- شروع دیباگ و اصلاح nights ---
         console.log('DEBUG: getLastUserReservation - Booking Dates:', {
             from: fromDateOriginal,
             to: toDateOriginal
@@ -482,12 +481,10 @@ export const getLastUserReservation = async (req, res) => {
 
         let nights = Math.ceil(rawDaysDiff);
 
-        // ★ اصلاح اصلی: اگر تفاوت زمانی مثبت است ولی تعداد شب‌ها صفر محاسبه شد، آن را 1 در نظر بگیر
         if (nights === 0 && rawTimeDiffMs > 0) {
             nights = 1;
             console.warn('DEBUG: getLastUserReservation - Forcing nights to 1. Original calculation was 0 for a positive duration.');
         }
-        // --- پایان دیباگ و اصلاح nights ---
 
         res.json({
             title: lastVilla.title,
@@ -497,7 +494,7 @@ export const getLastUserReservation = async (req, res) => {
             to: lastReservation.to,
             pricePerNight: lastVilla.pricePerNight,
             capacity: lastVilla.capacity,
-            nights: nights, // ★ اصلاح شده
+            nights: nights,
             totalPrice: lastVilla.pricePerNight * nights,
             imageUrl: lastVilla.images[0] || '/default-villa.jpg'
         });
@@ -544,7 +541,6 @@ export const getUserReservations = async (req, res) => {
                 const fromDateOriginal = booking.from;
                 const toDateOriginal = booking.to;
 
-                // --- شروع دیباگ و اصلاح nights ---
                 console.log('DEBUG: getUserReservations - Booking Dates:', {
                     from: fromDateOriginal,
                     to: toDateOriginal
@@ -559,12 +555,10 @@ export const getUserReservations = async (req, res) => {
 
                 let nights = Math.ceil(rawDaysDiff);
 
-                // ★ اصلاح اصلی: اگر تفاوت زمانی مثبت است ولی تعداد شب‌ها صفر محاسبه شد، آن را 1 در نظر بگیر
                 if (nights === 0 && rawTimeDiffMs > 0) {
                     nights = 1;
                     console.warn('DEBUG: getUserReservations - Forcing nights to 1. Original calculation was 0 for a positive duration.');
                 }
-                // --- پایان دیباگ و اصلاح nights ---
 
                 allReservations.push({
                     _id: booking._id,
@@ -575,7 +569,7 @@ export const getUserReservations = async (req, res) => {
                     to: booking.to,
                     pricePerNight: villa.pricePerNight,
                     capacity: villa.capacity,
-                    nights: nights, // ★ اصلاح شده
+                    nights: nights,
                     totalPrice: villa.pricePerNight * nights,
                     imageUrl: villa.images[0] || '/default-villa.jpg'
                 });

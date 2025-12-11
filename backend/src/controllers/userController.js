@@ -1,6 +1,5 @@
 import User from '../models/User.js';
 
-// دریافت پروفایل کاربر جاری
 export const getMyProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id)
@@ -27,7 +26,6 @@ export const getMyProfile = async (req, res) => {
     }
 };
 
-// به‌روزرسانی پروفایل
 export const updateMyProfile = async (req, res) => {
     try {
         const {
@@ -42,7 +40,6 @@ export const updateMyProfile = async (req, res) => {
             description
         } = req.body;
 
-        // بررسی وجود کاربر
         const user = await User.findById(req.user.id);
 
         if (!user) {
@@ -52,7 +49,6 @@ export const updateMyProfile = async (req, res) => {
             });
         }
 
-        // بررسی تکراری بودن کد ملی
         if (nationalId && nationalId !== user.nationalId) {
             const existingNationalId = await User.findOne({
                 nationalId,
@@ -67,7 +63,6 @@ export const updateMyProfile = async (req, res) => {
             }
         }
 
-        // بررسی تکراری بودن شماره تلفن
         if (phoneNumber && phoneNumber !== user.phoneNumber) {
             const existingPhone = await User.findOne({
                 phoneNumber,
@@ -82,7 +77,6 @@ export const updateMyProfile = async (req, res) => {
             }
         }
 
-        // بررسی تکراری بودن ایمیل
         if (email && email !== user.email) {
             const existingEmail = await User.findOne({
                 email,
@@ -97,7 +91,6 @@ export const updateMyProfile = async (req, res) => {
             }
         }
 
-        // به‌روزرسانی فیلدها
         if (firstName) user.firstName = firstName;
         if (lastName) user.lastName = lastName;
         if (nationalId !== undefined) user.nationalId = nationalId;
@@ -110,7 +103,6 @@ export const updateMyProfile = async (req, res) => {
 
         await user.save();
 
-        // ارسال پاسخ بدون فیلدهای حساس
         const userResponse = user.toObject();
         delete userResponse.verificationCode;
         delete userResponse.verificationCodeExpires;
@@ -130,7 +122,6 @@ export const updateMyProfile = async (req, res) => {
     }
 };
 
-// حذف عکس پروفایل
 export const deleteProfileImage = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);

@@ -1,7 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
-// ورود شماره تلفن و ارسال کد
 export const enterPhoneNumber = async (req, res) => {
     try {
         const {phoneNumber} = req.body;
@@ -26,7 +25,7 @@ export const enterPhoneNumber = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "کد تایید ارسال شد",
-            code, // در production حذف شود
+            code,
             userExists: Boolean(user.firstName),
         });
 
@@ -39,7 +38,6 @@ export const enterPhoneNumber = async (req, res) => {
     }
 };
 
-// تایید کد ارسالی
 export const phoneNumberVerification = async (req, res) => {
     try {
         const {phoneNumber, code} = req.body;
@@ -67,7 +65,6 @@ export const phoneNumberVerification = async (req, res) => {
             });
         }
 
-        // علامت‌گذاری کاربر به عنوان تایید شده
         user.isVerified = true;
         await user.save();
 
@@ -87,7 +84,6 @@ export const phoneNumberVerification = async (req, res) => {
     }
 };
 
-// ورود کاربر (برای کاربران موجود)
 export const login = async (req, res) => {
     try {
         const {phoneNumber} = req.body;
@@ -118,7 +114,6 @@ export const login = async (req, res) => {
             {expiresIn: "7d"}
         );
 
-        // حذف فیلدهای حساس
         const userResponse = user.toObject();
         delete userResponse.verificationCode;
         delete userResponse.verificationCodeExpires;
@@ -139,12 +134,10 @@ export const login = async (req, res) => {
     }
 };
 
-// ثبت‌نام کاربر جدید
 export const register = async (req, res) => {
     try {
         const {firstName, lastName, phoneNumber, role} = req.body;
 
-        // اعتبارسنجی ورودی‌ها
         if (!firstName || !lastName || !phoneNumber) {
             return res.status(400).json({
                 success: false,
@@ -155,14 +148,12 @@ export const register = async (req, res) => {
         let user = await User.findOne({phoneNumber});
 
         if (user) {
-            // به‌روزرسانی کاربر موجود
             user.firstName = firstName;
             user.lastName = lastName;
             user.role = role || "user";
             user.isVerified = true;
             await user.save();
         } else {
-            // ایجاد کاربر جدید
             user = await User.create({
                 firstName,
                 lastName,
@@ -182,7 +173,6 @@ export const register = async (req, res) => {
             {expiresIn: "7d"}
         );
 
-        // حذف فیلدهای حساس
         const userResponse = user.toObject();
         delete userResponse.verificationCode;
         delete userResponse.verificationCodeExpires;
@@ -204,7 +194,6 @@ export const register = async (req, res) => {
     }
 };
 
-// دریافت اطلاعات کاربر جاری
 export const getMe = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
