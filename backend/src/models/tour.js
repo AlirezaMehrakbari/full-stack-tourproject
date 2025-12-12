@@ -108,7 +108,7 @@ const tourSchema = new mongoose.Schema(
         },
 
         itinerary: [{
-            day: { type: Number },
+            day: { type: String },
             title: { type: String },
             description: { type: String },
             activities: [{ type: String }]
