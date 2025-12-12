@@ -1,7 +1,7 @@
 import Axios from 'axios';
 
 export const tripTourApi = Axios.create({
-    baseURL: 'http://localhost:5000/api/',
+    baseURL: 'https://api-triptour.liara.run/api/',
 });
 
 tripTourApi.interceptors.request.use(
