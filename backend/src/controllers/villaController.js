@@ -1,5 +1,5 @@
-import Villa from "../models/Villa.js";
-import User from "../models/User.js";
+import Villa from "../models/villa.js";
+import User from "../models/user.js";
 import mongoose from "mongoose";
 
 const ensureAllFields = (villaDoc) => {
