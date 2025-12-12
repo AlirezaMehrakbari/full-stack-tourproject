@@ -13,8 +13,8 @@ const PaymentDetails = () => {
                     <p className=' font-kalameh500 text-[9px]'>سه شنبه 6 ابان 1402</p>
                 </div>
                 <div className='flex flex-col'>
-                    <p className='pr-[50px] font-kalameh500 text-[9px] py-2'>600,000 تومان</p>
-                    <p className='pr-[50px] font-kalameh500 text-[9px] '>600,000 تومان</p>
+                    <p className='pr-[50px] font-kalameh500 text-[9px] py-2'>600,000 ریال</p>
+                    <p className='pr-[50px] font-kalameh500 text-[9px] '>600,000 ریال</p>
                 </div>
             </div>
         </div>

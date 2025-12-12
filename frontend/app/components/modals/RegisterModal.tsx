@@ -233,7 +233,7 @@ const RegisterModal = () => {
     if (step === 2) {
         content = (
             <form onSubmit={handleSubmit(handleThirdStep)}
-                  className='flex flex-col items-center py-12 w/[45%] mx-auto'>
+                  className='flex flex-col items-center py-12 w-[45%] mx-auto'>
                 <h2 className='text-[21.5px] font-kalameh500 pt-12'>مشخصات شخصی</h2>
                 <p className='text-[14px] pt-2 text-[#000]'>لطفا مشخصات خود را وارد کنید</p>
 

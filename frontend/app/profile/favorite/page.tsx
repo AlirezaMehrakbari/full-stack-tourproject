@@ -76,7 +76,7 @@ const Favorite = () => {
                                     </div>
 
                                     <div className="flex flex-row">
-                                        <p className="text-[8.372px] font-kalameh400 ">{FormatCurrency(+item.pricePerNight)} تومان</p>
+                                        <p className="text-[8.372px] font-kalameh400 ">{FormatCurrency(+item.pricePerNight)} ریال</p>
                                     </div>
                                 </div>
                             </div>

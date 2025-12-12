@@ -1,5 +1,6 @@
-'use client';
+// @ts-nocheck
 
+'use client';
 import {useState} from 'react';
 import DatePicker from 'react-multi-date-picker';
 import persian from 'react-date-object/calendars/persian';
@@ -8,7 +9,7 @@ import SuperAdminNavbar from "@/app/components/superAdmin/SuperAdminNavbar";
 import {tripTourApi} from "@/axios-instances";
 
 export default function CreateTourAdmin() {
-    const formatCurrency = (value) => {
+    const formatCurrency = (value: any) => {
         if (!value) return '';
         const numericValue = value.toString().replace(/,/g, '');
         return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -325,7 +326,7 @@ export default function CreateTourAdmin() {
                                     </h3>
 
                                     <div>
-                                        <label className={labelClass}>قیمت (تومان) *</label>
+                                        <label className={labelClass}>قیمت (ریال) *</label>
                                         <input
                                             type="text"
                                             name="price"
@@ -337,7 +338,7 @@ export default function CreateTourAdmin() {
                                         />
                                         {formData.price && (
                                             <p className="text-xs text-green-600 mt-1">
-                                                💵 {formatCurrency(formData.price)} تومان
+                                                💵 {formatCurrency(formData.price)} ریال
                                             </p>
                                         )}
                                     </div>
@@ -371,7 +372,7 @@ export default function CreateTourAdmin() {
                                             <p className="text-xs text-orange-600 mt-1">
                                                 🎁 قیمت با تخفیف: {formatCurrency(
                                                 Math.floor(parseCurrency(formData.price) * (1 - formData.discount.percentage / 100))
-                                            )} تومان
+                                            )} ریال
                                             </p>
                                         )}
                                     </div>

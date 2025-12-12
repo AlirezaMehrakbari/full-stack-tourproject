@@ -61,7 +61,7 @@ const ResidencesPage: React.FC = () => {
                                 </p>
 
                                 <p className="text-blue-600 font-medium">
-                                    قیمت: {villa.pricePerNight.toLocaleString()} تومان
+                                    قیمت: {villa.pricePerNight.toLocaleString()} ریال
                                 </p>
                             </div>
 

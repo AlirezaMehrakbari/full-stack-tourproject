@@ -21,17 +21,17 @@ const Navbar = () => {
                 <Link href={'/'} className='pl-6'><Logo width={'w-[100px] h-[60px] sm:w-[190px] sm:h-[90px]'}/></Link>
                 <ul className='hidden items-center lg:text-[20.6px] font-kalameh400 lg:gap-x-[53px] lg:flex'>
                     <Link href={'/villa'} className={(pathname === '/villa' ? 'active' : '')}>
-                        <li>ویلا</li>
+                        <li>اقامتگاه</li>
                     </Link>
-                    <Link href={'/'}>
-                        <li>آپارتمان</li>
-                    </Link>
-                    <Link href={'/'}>
-                        <li>ساحلی</li>
-                    </Link>
-                    <Link href={'/'}>
-                        <li>هتل</li>
-                    </Link>
+                    {/*<Link href={'/'}>*/}
+                    {/*    <li>آپارتمان</li>*/}
+                    {/*</Link>*/}
+                    {/*<Link href={'/'}>*/}
+                    {/*    <li>ساحلی</li>*/}
+                    {/*</Link>*/}
+                    {/*<Link href={'/'}>*/}
+                    {/*    <li>هتل</li>*/}
+                    {/*</Link>*/}
                     <Link href={'/tour'} className={(pathname === '/tour' ? 'active' : '')}>
                         <li>خرید تور</li>
                     </Link>

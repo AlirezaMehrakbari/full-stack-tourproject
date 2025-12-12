@@ -373,7 +373,7 @@ const VillaForm = () => {
                             <div>
                                 <label className={labelClass}>
                                     <FiDollarSign />
-                                    قیمت هر شب (تومان) *
+                                    قیمت هر شب (ریال) *
                                 </label>
                                 <input
                                     type="number"

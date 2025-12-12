@@ -123,7 +123,7 @@ const VillaItem: React.FC<VillaItemProps> = ({
                     </div>
 
                     <div className="flex flex-row">
-                        <p className="text-[14px] font-kalameh400 text-[#706E6E] group-hover:text-[#000] group-hover:font-kalameh500">{FormatCurrency(+price)} تومان</p>
+                        <p className="text-[14px] font-kalameh400 text-[#706E6E] group-hover:text-[#000] group-hover:font-kalameh500">{FormatCurrency(+price)} ریال</p>
                     </div>
                 </div>
             </Link>

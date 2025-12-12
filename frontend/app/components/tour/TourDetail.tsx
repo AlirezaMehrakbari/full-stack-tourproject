@@ -10,7 +10,7 @@ import Comments from "@/app/components/Comments";
 import Button from "@/app/components/Button";
 import useStep from "@/app/hooks/useStep";
 import SelectDropDown from "@/app/components/dropDown/SelectDropDown";
-import { useEffect } from "react";
+import {useEffect, useState} from "react";
 import Stepper from "@/app/components/Stepper";
 import {Tour} from "@/app/tour/_types/tourTypes";
 import moment from 'jalali-moment';
@@ -18,8 +18,9 @@ import {decrementPassenger, incrementPassenger, setTotalPrice, setTravelDate} fr
 import {useAppDispatch, useAppSelector} from "@/app/redux/store";
 
 const TourDetail = ({data}: { data: Tour }) => {
+    const [activeImage, setActiveImage] = useState(data?.coverImage)
     const dispatch = useAppDispatch();
-    const { travelDate, passengers, totalPrice } = useAppSelector(state => state.tourReserve);
+    const {travelDate, passengers, totalPrice} = useAppSelector(state => state.tourReserve);
 
     const step1 = useStep();
 
@@ -49,7 +50,7 @@ const TourDetail = ({data}: { data: Tour }) => {
                 <div className='flex item-center justify-between w-full py-8 h-full'>
                     <Image
                         className='w-[70%] object-cover rounded-[12px]'
-                        src={data?.coverImage || TourDetail0}
+                        src={activeImage || TourDetail0}
                         alt={'Tour Detail Picture'}
                         width={800}
                         height={600}
@@ -57,8 +58,9 @@ const TourDetail = ({data}: { data: Tour }) => {
                     <div className='flex gap-y-3 flex-col w-[25%] justify-between'>
                         {data?.images?.slice(0, 3).map((img, index) => (
                             <Image
+                                onClick={() => setActiveImage(img)}
                                 key={index}
-                                className='rounded-[12px]'
+                                className='rounded-[12px] object-cover'
                                 src={img}
                                 alt={`Tour Detail Picture ${index + 1}`}
                                 width={300}
@@ -380,7 +382,7 @@ const TourDetail = ({data}: { data: Tour }) => {
                                 <div className='flex items-center justify-between'>
                                     <p className='text-[17.5px] font-kalameh400'>مجموع قیمت :</p>
                                     <p className='text-[18px] font-kalameh700 text-[#FF7512]'>
-                                        {totalPrice.toLocaleString('fa-IR')} تومان
+                                        {totalPrice.toLocaleString('fa-IR')} ریال
                                     </p>
                                 </div>
                                 <Button styles='text-[24px] font-kalameh400 rounded-[5px] h-[56px]'
@@ -573,7 +575,7 @@ const TourDetail = ({data}: { data: Tour }) => {
                         <div className='flex items-center justify-between'>
                             <p className='text-[17.5px] font-kalameh400'>مجموع قیمت :</p>
                             <p className='text-[18px] font-kalameh700 text-[#FF7512]'>
-                                {totalPrice.toLocaleString('fa-IR')} تومان
+                                {totalPrice.toLocaleString('fa-IR')} ریال
                             </p>
                         </div>
                         <Button styles='text-[24px] font-kalameh400 rounded-[5px] h-[56px]' onClick={handleStep}>

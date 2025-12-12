@@ -10,6 +10,7 @@ import 'swiper/css/bundle'
 import 'swiper/css/autoplay'
 import Image, {StaticImageData} from "next/image";
 import Arrow from '@/public/icons/Arrow.svg'
+import {useRouter} from "next/navigation";
 
 
 export function SlideNextButton() {
@@ -27,13 +28,14 @@ export function SlideNextButton() {
 type AppSwiper = {
     id: number,
     title: string,
-    src: StaticImageData
+    src: string
 }
 type AppSwiperProps = {
     data: AppSwiper[]
 }
 
 const AppSwiper: React.FC<AppSwiperProps> = ({data}) => {
+    const router = useRouter()
     // const swiper = useSwiper()
     return (
         <Swiper
@@ -45,26 +47,33 @@ const AppSwiper: React.FC<AppSwiperProps> = ({data}) => {
                 disableOnInteraction: false
             }}
             breakpoints={{
-                // when window width is >= 320px\
+                320: {
+                    slidesPerView: 1,
+                    spaceBetween: 50,
+                },
+                480: {
+                    slidesPerView: 1.5,
+                    spaceBetween: 50,
+                },
                 600: {
                     slidesPerView: 2,
-                    spaceBetween: 100,
+                    spaceBetween: 50,
                 },
                 750: {
-                    slidesPerView: 2.5,
-                    spaceBetween: 100,
+                    slidesPerView: 2,
+                    spaceBetween: 30,
                 },
                 1000: {
                     slidesPerView: 3.5,
-                    spaceBetween: 100,
+                    spaceBetween: 30,
                 },
                 1300: {
                     slidesPerView: 4,
-                    spaceBetween: 100,
+                    spaceBetween: 30,
                 },
                 1350: {
                     slidesPerView: 4.5,
-                    spaceBetween: 100,
+                    spaceBetween: 30,
                 },
             }}
             className='relative'
@@ -79,9 +88,16 @@ const AppSwiper: React.FC<AppSwiperProps> = ({data}) => {
             {data.map(item => {
                 return (
                     <SwiperSlide>
-                        <div className='flex flex-col items-center'>
-                            <Image src={item.src} alt={item.title}
-                                   className='max-w-[267px] max-h-[348px] mx-auto rounded-[12px] shadow-lg'/>
+                        <div className='flex flex-col items-center' onClick={()=>router.push(`/villa/${item.id}`)}>
+                            <div
+                            className={"w-full h-[250px] relative"}
+                            >
+                                <Image
+                                    src={item.src}
+                                    alt={item.title}
+                                    fill
+                                className='mx-auto rounded-[12px] shadow-lg object-cover'/>
+                            </div>
                             <p className='pt-3 font-kalameh400 text-[20px]'>{item.title}</p>
                         </div>
                     </SwiperSlide>

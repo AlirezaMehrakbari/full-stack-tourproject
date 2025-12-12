@@ -39,7 +39,7 @@ const Reserve = ({ data }: ReserveProps) => {
             id: 3,
             logo: <AiOutlineDollar color={"#FF7512"} size={20}/>,
             title: "هزینه هر شب",
-            matn: data.pricePerNight.toLocaleString() + " تومان"
+            matn: data.pricePerNight.toLocaleString() + " ریال"
         },
         {
             id: 4,

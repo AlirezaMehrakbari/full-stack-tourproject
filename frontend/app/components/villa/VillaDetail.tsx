@@ -25,6 +25,7 @@ import Loading from "@/app/components/Loading";
 const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
     const step = useStep()
     const dispatch = useAppDispatch()
+    const [activeImage, setActiveImage] = useState(villaDetails.medias[0])
     const [firstMonth, setFirstMonth] = useState([
         new DateObject({calendar: persian}).setDay(5),
         new DateObject({calendar: persian}).setDay(12),
@@ -67,7 +68,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
     return (
         <div>
             <Stepper isVilla/>
-            <div className='w-[90%] mx-auto lg:pt-[10rem]'>
+            <div className='w-[90%] mx-auto md:pt-[10rem]'>
                 <section className='py-16 border-b-[0.7px] border-[#9E9E9E]'>
                     <div className='flex flex-col lg:flex-row pb-20'>
                         <div
@@ -75,7 +76,7 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                             <div className='relative lg:w-[80%] max-lg:h-60'>
                                 <Image
                                     className='rounded-[12px] object-cover object-center shadow-md hover:shadow-lg cursor-pointe h-full'
-                                    src={villaDetails.medias[0]}
+                                    src={activeImage}
                                     alt={'Villa Picture'}
                                     fill
                                 />
@@ -93,7 +94,8 @@ const VillaDetail = ({villaDetails}: { villaDetails: VillaDetails }) => {
                                 {villaDetails.medias.filter((item, index) => index < 3).map(picture => {
                                     return (
                                         <div
-                                            className={'relative w-full h-[100px] '}
+                                            onClick={() => setActiveImage(picture)}
+                                            className={'relative w-full h-[150px] '}
                                         >
                                             <Image
                                                 className='rounded-[12px] shadow-md max-lg:w-[30%] h-[100px] lg:h-[80px] xl:h-[110px] object-cover'

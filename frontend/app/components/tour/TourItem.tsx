@@ -58,7 +58,7 @@ const TourItem: React.FC<TourItemProps> = ({
                 <div className='grid justify-items-center text-center pt-4'>
                     <div className='text-cblue text-[20.2px] font-kalameh700 w-full'>
                         قیمت :
-                        <span>{FormatCurrency(price)} تومان</span>
+                        <span>{FormatCurrency(price)} ریال</span>
                     </div>
                     <div
                         className='flex items-center bg-[#C8B616] text-white text-[17.8px] font-kalameh500 rounded-br-lg rounded-bl-lg px-2'>

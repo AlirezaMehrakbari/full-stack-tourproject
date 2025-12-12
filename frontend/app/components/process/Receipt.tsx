@@ -91,7 +91,7 @@ const Receipt: React.FC<ReceiptProps> = ({isVilla, villaDetails, tourDetails}) =
                             </div>
                             <div className='sm:text-[25.5px] flex items-center gap-x-2'>
                                 <p className='text-[#777575]'>مبلغ پرداختی:</p>
-                                <p>{formatCurrency(+calculateTotalPrice())} تومان</p>
+                                <p>{formatCurrency(+calculateTotalPrice())} ریال</p>
                             </div>
                         </div>
 
